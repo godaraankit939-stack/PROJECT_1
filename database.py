@@ -30,6 +30,13 @@ async def is_sudo(user_id):
     res = await sudo_col.find_one({"user_id": user_id})
     return True if res else False
 
+# Ye function missing tha, isliye error aaya
+async def get_sudo_list():
+    sudo_users = []
+    async for user in sudo_col.find():
+        sudo_users.append(user["user_id"])
+    return sudo_users
+
 # --- BAN FUNCTIONS ---
 async def ban_user(user_id):
     await ban_col.update_one({"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True)
@@ -62,3 +69,4 @@ async def save_original_profile(user_id, first_name, last_name, about):
 
 async def get_original_profile(user_id):
     return await profile_col.find_one({"user_id": user_id})
+    
