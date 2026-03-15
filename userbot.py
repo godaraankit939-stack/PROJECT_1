@@ -1,5 +1,7 @@
 import asyncio
 import importlib
+import os
+import sys
 from pathlib import Path
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -7,6 +9,9 @@ from telethon.sessions import StringSession
 # Environment aur Database se imports
 from config import API_ID, API_HASH, OWNER_ID
 from database import get_all_sessions, get_maintenance, is_sudo
+
+# Render fix: ensures config/database are found
+sys.path.append(os.getcwd())
 
 async def start_userbots():
     """Database se saare sessions uthakar ek saath start karne ke liye"""
@@ -28,7 +33,6 @@ async def start_userbots():
                 print(f"✅ Live: {me.first_name} (@{me.username})")
 
                 # --- GLOBAL MAINTENANCE HANDLER ---
-                # Ye har client ke liye check karega ki bot maintenance pe hai ya nahi
                 @client.on(events.NewMessage(outgoing=True))
                 async def global_maintenance_manager(event):
                     if await get_maintenance():
@@ -40,43 +44,8 @@ async def start_userbots():
                                 raise events.StopPropagation
 
                 # --- DYNAMIC PLUGIN LOADER ---
-                # Ye plugins/ folder se sari files load karega
                 await load_plugins(client)
                 
                 # Client ko background task mein run karna
                 asyncio.create_task(client.run_until_disconnected())
-            
-            else:
-                print(f"❌ Session invalid or expired: {session_str[:15]}...")
-
-        except Exception as e:
-            print(f"⚠️ Failed to start a session: {e}")
-
-async def load_plugins(client):
-    """Plugins load karne ka logic"""
-    path = Path("plugins")
-    for file in path.glob("*.py"):
-        if file.name == "__init__.py":
-            continue
-        
-        module_path = f"plugins.{file.stem}"
-        try:
-            # Module ko reload/import karna
-            plugin = importlib.import_module(module_path)
-            
-            # Har plugin mein setup(client) function hona chahiye
-            if hasattr(plugin, "setup"):
-                await plugin.setup(client)
-        except Exception as e:
-            print(f"❗ Error loading plugin {file.name}: {e}")
-
-if __name__ == "__main__":
-    print("✨ DARK-USERBOT Engine Starting...")
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(start_userbots())
-        print("🚀 All hosted accounts are now active.")
-        loop.run_forever()
-    except KeyboardInterrupt:
-        print("🛑 Engine Stopped.")
                 
