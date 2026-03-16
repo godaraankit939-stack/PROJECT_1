@@ -3,8 +3,13 @@ from telethon import events, functions
 from database import (
     is_banned, get_maintenance, is_approved, 
     approve_user, disapprove_user, get_antipm_status,
-    is_warned_in_db, set_warned_in_db, delete_warned_user, set_antipm_status
+    is_warned_in_db, set_warned_in_db, delete_warned_user, 
+    set_antipm_status, is_sudo
 )
+
+
+
+
 from config import OWNER_ID
 
 # Universal Auth Check
