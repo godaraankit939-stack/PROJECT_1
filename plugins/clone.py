@@ -1,9 +1,8 @@
 import asyncio
 import random
 import os
-import requests
 from telethon import events
-from telethon.tl.functions.photos import UploadProfilePhotoRequest
+from telethon.tl.functions.photos import UploadProfilePhotoRequest, DeletePhotosRequest, GetUserPhotosRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl.functions.users import GetFullUserRequest
 from database import get_maintenance, is_sudo, is_banned
@@ -11,76 +10,80 @@ from config import OWNER_ID
 
 # --- CONFIG & SHIELD ---
 PROTECTED_USERNAME = "WILDxMSD"
-AURA_URL = "https://raw.githubusercontent.com/Ankit/DARK-USERBOT/main/auralines.txt"
-
-def get_remote_aura():
-    try:
-        response = requests.get(AURA_URL)
-        if response.status_code == 200:
-            return [line.strip() for line in response.text.split('\n') if line.strip()]
-    except:
-        pass
-    return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤𝖣** 🛡️", "⌬ `System: God Mode Active` ✨"]
+ORIGINAL_DATA = {} # Temp backup for Revert
 
 async def setup(client):
     @client.on(events.NewMessage(pattern=r"\.clone(?: |$)(.*)"))
     async def identity_clone(event):
         me = await event.client.get_me()
-
-        # 🛡️ 1. NO ENTRY LOGIC
+        
+        # 🛡️ 1. NO ENTRY LOGIC (Owner's Chat Protection)
         if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
-            aura_list = get_remote_aura()
-            selected_aura = random.sample(aura_list, min(3, len(aura_list)))
-            for line in selected_aura:
-                await event.edit(line)
-                await asyncio.sleep(1.5)
-            return
+            return # Silent block for others
 
-        # 🚫 2. IDENTITY SHIELD (The Sun Logic)
+        # Input extraction
         user_input = event.pattern_match.group(1).strip()
-        if PROTECTED_USERNAME in user_input or user_input == f"@{PROTECTED_USERNAME}":
-            if event.sender_id != me.id:
+        reply = await event.get_reply_message()
+        target = reply.sender_id if reply else user_input
+        
+        if not target: 
+            return await event.edit("`Bhulaaaa! Target toh do?`")
+
+        # 🚫 2. IDENTITY SHIELD (Strict Verification Shakti)
+        try:
+            target_obj = await event.client.get_entity(target)
+            # CHECK: Kya target MSD (ID ya Username) hai?
+            is_master = (
+                target_obj.id == OWNER_ID or 
+                (target_obj.username and target_obj.username.lower() == PROTECTED_USERNAME.lower())
+            )
+            
+            if is_master and event.sender_id != me.id:
                 shield_lines = [
                     "👑 **The Sun is only one. You cannot mirror the Sun.**",
                     "⚜️ **Master's legacy is encrypted. No one can copy the Sun.**"
                 ]
                 return await event.edit(random.choice(shield_lines))
+        except Exception:
+            pass # Target invalid ho toh aage badho
 
         # 🛠️ 3. BAN & MAINTENANCE CHECK
         if await is_banned(event.sender_id): return
-        if await get_maintenance():
-            if event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
-                return await event.edit("🛠 **Maintenance Mode is ON.**")
+        if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
+            return await event.edit("🛠 **Maintenance Mode is ON.**")
 
         if event.sender_id != me.id: return 
 
-        reply = await event.get_reply_message()
-        target = reply.sender_id if reply else user_input
-        if not target: return await event.edit("`Bhulaaaa! Target toh do?`")
+        # 📦 BACKUP ORIGINAL DATA (Pehli baar clone par)
+        if not ORIGINAL_DATA:
+            full_me = await event.client(GetFullUserRequest(me.id))
+            ORIGINAL_DATA['first_name'] = me.first_name or ""
+            ORIGINAL_DATA['last_name'] = me.last_name or ""
+            ORIGINAL_DATA['about'] = full_me.full_user.about or ""
+            # PFP download for revert
+            photo = await event.client.download_profile_photo(me.id, "original_pfp.jpg")
+            ORIGINAL_DATA['photo'] = photo
 
         await event.edit("`🔄 Cloning Identity... Please wait.`")
         
         try:
             full_user = await event.client(GetFullUserRequest(target))
             user = full_user.users[0]
-            
-            # Sakti 1: Secure Bio Extraction
             user_bio = getattr(full_user.full_user, 'about', "") or ""
             
-            # Sakti 2: Update Profile Details
+            # Update Name & Bio
             await event.client(UpdateProfileRequest(
                 first_name=user.first_name or "",
                 last_name=user.last_name or "",
                 about=user_bio
             ))
             
-            # Sakti 3: Error-Proof Photo Upload
+            # Update Photo
             photo = await event.client.download_profile_photo(user)
-            if photo and os.path.exists(photo):
+            if photo:
                 uploaded_photo = await event.client.upload_file(photo)
-                # Explicitly passing 'file' parameter to fix InputFile error
                 await event.client(UploadProfilePhotoRequest(file=uploaded_photo))
-                os.remove(photo)
+                if os.path.exists(photo): os.remove(photo)
             
             await event.edit(f"✅ **Identity Cloned Successfully!**\n`Bhulaaaa Mode: Active` 🎭")
         except Exception as e:
@@ -90,18 +93,30 @@ async def setup(client):
     @client.on(events.NewMessage(pattern=r"\.revert"))
     async def identity_revert(event):
         me = await event.client.get_me()
-        if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
-            return 
         if event.sender_id != me.id: return
 
-        await event.edit("`🔄 Reverting to Original Master Identity...`")
+        if not ORIGINAL_DATA:
+            return await event.edit("`❌ No backup found! Try cloning someone first.`")
+
+        await event.edit("`🔄 Reverting to Original Identity...`")
         try:
+            # 1. Restore Name & Bio
             await event.client(UpdateProfileRequest(
-                first_name="Ankit", 
-                last_name="👑", 
-                about="Master of DARK-USERBOT 💀 | @WILDxMSD"
+                first_name=ORIGINAL_DATA['first_name'],
+                last_name=ORIGINAL_DATA['last_name'],
+                about=ORIGINAL_DATA['about']
             ))
-            await event.edit("✅ **Identity Restored!** 👑")
+            
+            # 2. Restore Photo (Delete Clone PFP first)
+            photos = await event.client(GetUserPhotosRequest(user_id=me.id, offset=0, max_id=0, limit=1))
+            if photos.photos:
+                await event.client(DeletePhotosRequest(id=[photos.photos[0]]))
+            
+            if ORIGINAL_DATA['photo'] and os.path.exists(ORIGINAL_DATA['photo']):
+                uploaded_photo = await event.client.upload_file(ORIGINAL_DATA['photo'])
+                await event.client(UploadProfilePhotoRequest(file=uploaded_photo))
+            
+            await event.edit("✅ **Identity Restored! The Sun is back.** 👑")
         except Exception as e:
             await event.edit(f"❌ **Error:** `{e}`")
-    
+        
