@@ -30,22 +30,24 @@ async def setup(client):
         global AFK_STATUS, AFK_REASON, AFK_TIME
         me = await event.client.get_me()
 
-        # --- OWNER PROTECTION SYSTEM ---
-        if event.sender_id != me.id:
-            if event.is_private:
-                aura_list = get_remote_aura()
-                selected_aura = random.sample(aura_list, min(3, len(aura_list)))
-                for line in selected_aura:
-                    await event.reply(line)
-                    await asyncio.sleep(1)
+        # --- NO ENTRY LOGIC (FORCEFUL EDIT) ---
+        # 1. Check: Kya msg MSD (OWNER_ID) ki chat mein hai?
+        # 2. Check: Kya bhejnewala wo Client hai (Jo MSD khud nahi hai)?
+        if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
+            aura_list = get_remote_aura()
+            selected_aura = random.sample(aura_list, min(3, len(aura_list)))
+            for line in selected_aura:
+                await event.edit(line) # Client ka message edit hoga
+                await asyncio.sleep(1.5)
             return
-        # --- PROTECTION END ---
-        
-        # 1. BAN CHECK
+
+        # --- OWNER / NORMAL WORKFLOW ---
+        if not event.out: # Loop Protection: Dusron ki cmd par trigger na ho
+            return
+            
         if await is_banned(event.sender_id):
             return
 
-        # 2. MAINTENANCE CHECK
         if await get_maintenance():
             if event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
                 return await event.edit("🛠 **Maintenance Mode is ON.**")
@@ -61,8 +63,6 @@ async def setup(client):
         # Set AFK
         AFK_STATUS = True
         AFK_TIME = datetime.datetime.now()
-        
-        # DEFAULT AURA REASON
         AFK_REASON = cmd_input if cmd_input else "I am the master of my own silence."
         
         await event.edit(f"**⌬ 𝖲𝖸𝖲𝖳𝖤𝖬 𝖨𝖲 𝖴𝖭𝖱𝖤𝖠𝖢𝖧𝖠𝖡𝖫𝖤** 💀\n`Ghost Mode Activated.`")
@@ -71,6 +71,7 @@ async def setup(client):
     @client.on(events.NewMessage(outgoing=True))
     async def auto_off_handler(event):
         global AFK_STATUS
+        # Pattern match check taaki .afk off likhne par welcome back na aaye
         if AFK_STATUS and not event.text.startswith(".afk"):
             AFK_STATUS = False
             back_msg = await event.respond("**⌬ 𝖠𝖥𝖪 𝖠𝖴𝖳𝖮-𝖮𝖥▵**\n`Welcome back, Master!`")
@@ -82,7 +83,21 @@ async def setup(client):
     async def reply_handler(event):
         global AFK_STATUS, AFK_REASON, AFK_TIME
         
-        if AFK_STATUS and (event.is_private or event.mentioned):
+        if not AFK_STATUS:
+            return
+
+        me = await event.client.get_me()
+        
+        # 🚫 ANTI-LOOP SYSTEM 🚫
+        # 1. Bot khud ko reply nahi karega
+        if event.sender_id == me.id:
+            return
+        
+        # 2. Agar sender koi dusra bot hai (Bot loop protection)
+        if event.sender and event.sender.bot:
+            return
+
+        if event.is_private or event.mentioned:
             if await is_banned(event.sender_id):
                 return
 
@@ -100,4 +115,4 @@ async def setup(client):
                 "`Don't disturb the silence.`"
             )
             await event.reply(response)
-        
+    
