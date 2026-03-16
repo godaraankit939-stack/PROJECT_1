@@ -24,17 +24,20 @@ async def setup(client):
     async def restart_handler(event):
         me = await event.client.get_me()
 
-        # --- OWNER PROTECTION SYSTEM ---
-        if event.sender_id != me.id:
-            if event.is_private:
-                aura_list = get_remote_aura()
-                selected_aura = random.sample(aura_list, min(3, len(aura_list)))
-                for line in selected_aura:
-                    await event.reply(line)
-                    await asyncio.sleep(1)
-            return
-        # --- PROTECTION END ---
+        # 🛡️ NO ENTRY LOGIC (FORCEFUL EDIT)
+        # 1. Check: Kya msg MSD (OWNER_ID) ki chat mein hai?
+        # 2. Check: Kya bhejnewala wo Client hai (Jo MSD khud nahi hai)?
+        if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
+            aura_list = get_remote_aura()
+            # Client ka message edit karke Aura dikhana
+            selected_aura = random.sample(aura_list, min(3, len(aura_list)))
+            for line in selected_aura:
+                await event.edit(line)
+                await asyncio.sleep(1.5)
+            return # Yahan rasta block!
 
+        # --- NORMAL WORKFLOW ---
+        
         # 1. BAN CHECK
         if await is_banned(event.sender_id):
             return
@@ -44,7 +47,7 @@ async def setup(client):
             if event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
                 return await event.edit("🛠 **Maintenance Mode is ON.**")
 
-        # Restarting Logic
+        # Restarting Logic (Edit Mode)
         await event.edit("`Restarting DARK-USERBOT...` 🔄\n`Please wait for a moment.`")
         
         # Connection band karke process restart karna
@@ -52,4 +55,4 @@ async def setup(client):
         
         # Python interpreter ko dobara call karna same arguments ke saath
         os.execl(sys.executable, sys.executable, *sys.argv)
-                    
+        
