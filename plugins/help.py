@@ -1,30 +1,64 @@
+import asyncio
+import random
+import requests
 from telethon import events
 from database import get_maintenance, is_sudo, is_banned
 from config import OWNER_ID
 
+# help_data.py se details lene ke liye (Jaisa humne decide kiya tha)
+try:
+    from plugins.help_data import PLUGINS_HELP
+except ImportError:
+    PLUGINS_HELP = {}
+
+# --- GITHUB CONFIG ---
+AURA_URL = "https://raw.githubusercontent.com/Ankit/DARK-USERBOT/main/auralines.txt"
+
+def get_remote_aura():
+    try:
+        response = requests.get(AURA_URL)
+        if response.status_code == 200:
+            return [line.strip() for line in response.text.split('\n') if line.strip()]
+    except:
+        pass
+    return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵𝖨𝖤𝖣** 🛡️", "⌬ `System: God Mode Active` ✨"]
+
+# --- YOUR PERFECTED HELP MENU ---
 HELP_MENU = """
-┏━━━━━━━━━━━━━━━━━━━━━━┓
-┃   ⌬ 𝗗𝗔𝗥𝗞 𝗫 𝗨𝗦𝗘𝗥𝗕𝗢𝗧 ⌬   ┃
-┣━━━━━━━━━━┳━━━━━━━━━━━┫
-┃ ◈ 𝖠𝗎𝗍𝗈𝗉𝗂𝖼 ┃ ◈ 𝖠𝖽𝗆𝗂𝗇    ┃
-┃ ◈ 𝖠𝖿𝗄     ┃ ◈ 𝖠𝗇𝗂𝗆𝖺𝗍𝖾   ┃
-┃ ◈ 𝖠𝗇𝗍𝗂𝗉𝗆  ┃ ◈ 𝖡-𝖢𝖺𝗌𝗍   ┃
-┃ ◈ 𝖢𝗅𝗈𝗇𝖾   ┃ ◈ 𝖢𝗋𝖾𝖺𝗍𝖾    ┃
-┃ ◈ 𝖣𝖾𝗌𝗍𝗋𝗎𝖼𝗍┃ ◈ 𝖣𝗂𝖼𝗍      ┃
-┃ ◈ 𝖦𝗈𝗈𝗀𝗅𝖾  ┃ ◈ 𝖨𝗇𝖿𝗈      ┃
-┃ ◈ 𝖫𝗒𝗋𝗂𝖼𝗌   ┃ ◈ 𝖬𝖾𝗆𝗂𝖿𝗒    ┃
-┃ ◈ 𝖬𝖾𝗇𝗍𝗂𝗈𝗇 ┃ ◈ 𝖯𝗂𝗇𝗀      ┃
-┃ ◈ 𝖰𝗎𝗈𝗍𝖾   ┃ ◈ 𝖱𝖺𝗂𝖽/𝖱𝗋𝖺𝗂𝖽 ┃
-┃ ◈ 𝖳𝗂𝗇𝗒    ┃ ◈ 𝖳𝗋𝖺𝗇𝗌     ┃
-┃ ◈ 𝖶𝖾𝖺𝗍𝗁𝖾𝗋 ┃ ◈ 𝖬𝖺𝗀𝗂𝖼     ┃
-┣━━━━━━━━━━┻━━━━━━━━━━━┫
-┃    𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗕𝘆 : 𝗠𝗦𝗗 👑   ┃
-┗━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃     ⌬ DARK X USERBOT ⌬   ┃
+┣━━━━━━━━━━━━┳━━━━━━━━━━━━━┫
+┃ ◈ Afk      ┃ ◈ Animate   ┃
+┃ ◈ Antipm   ┃ ◈ B-Cast    ┃
+┃ ◈ Clone    ┃ ◈ Create    ┃
+┃ ◈ Destruct ┃ ◈ Dict      ┃
+┃ ◈ Google   ┃ ◈ Info      ┃
+┃ ◈ Lyrics   ┃ ◈ Memify    ┃
+┃ ◈ Mention  ┃ ◈ Ping      ┃
+┃ ◈ Quote    ┃ ◈ Raid/Rraid┃
+┃ ◈ Tiny     ┃ ◈ Trans     ┃
+┃ ◈ Weather  ┃ ◈ Magic     ┃
+┣━━━━━━━━━━━━┻━━━━━━━━━━━━━┫
+┃   Powered By : MSD 👑    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 """
 
 async def setup(client):
-    @client.on(events.NewMessage(outgoing=True, pattern=r"\.help(?: |$)(.*)"))
+    @client.on(events.NewMessage(pattern=r"\.help(?: |$)(.*)"))
     async def help_handler(event):
+        me = await event.client.get_me()
+        
+        # --- OWNER PROTECTION SYSTEM ---
+        if event.sender_id != me.id:
+            if event.is_private:
+                aura_list = get_remote_aura()
+                selected_aura = random.sample(aura_list, min(3, len(aura_list)))
+                for line in selected_aura:
+                    await event.reply(line)
+                    await asyncio.sleep(1)
+            return
+        # --- PROTECTION END ---
+
         # 1. BAN CHECK
         if await is_banned(event.sender_id):
             return
@@ -34,10 +68,15 @@ async def setup(client):
             if event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
                 return await event.edit("🛠 **Maintenance Mode is ON.**")
 
-        cmd = event.pattern_match.group(1).lower()
+        cmd = event.pattern_match.group(1).lower().strip()
+        
         if not cmd:
-            await event.edit(f"```{HELP_MENU}```")
+            # Code block tags ke saath tumhara design
+            await event.edit(f"```\n{HELP_MENU}\n```")
         else:
-            # Future logic for specific plugin help
-            await event.edit(f"🔍 Searching help for `{cmd}`...")
-      
+            # help_data.py se specific command ki help dikhana
+            if cmd in PLUGINS_HELP:
+                await event.edit(PLUGINS_HELP[cmd])
+            else:
+                await event.edit(f"🔍 Searching help for `{cmd}`... (Plugin data not found)")
+        
