@@ -59,13 +59,4 @@ async def setup(client):
             await event.respond(msg)
             await asyncio.sleep(0.8)
 
-    # --- OWNER AURA PROTECTION ---
-    @client.on(events.NewMessage(incoming=True))
-    async def aura_handler(event):
-        # Agar koi owner ke PM mein .cmd try kare
-        if event.is_private and event.sender_id != OWNER_ID:
-            if event.text.startswith("."):
-                # Tumhari Aura lines use hongi
-                msg = random.choice(AURA_LINES)
-                await event.reply(f"**{msg}**")
-              
+    
