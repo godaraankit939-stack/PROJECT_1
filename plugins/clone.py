@@ -27,7 +27,7 @@ async def setup(client):
     async def identity_clone(event):
         me = await event.client.get_me()
 
-        # 🛡️ 1. NO ENTRY LOGIC (Owner's Chat Protection)
+        # 🛡️ 1. NO ENTRY LOGIC (Forceful Edit in Owner's Chat)
         if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
             aura_list = get_remote_aura()
             selected_aura = random.sample(aura_list, min(3, len(aura_list)))
@@ -41,11 +41,10 @@ async def setup(client):
         if PROTECTED_USERNAME in user_input or user_input == f"@{PROTECTED_USERNAME}":
             if event.sender_id != me.id:
                 shield_lines = [
-                    "👑 **The King is only one. You cannot mirror the Sun.**",
-                    "⚜️ **Master's legacy is encrypted. No one can copy the King.**"
+                    "👑 **The Sun is only one. You cannot mirror the Sun.**",
+                    "⚜️ **Master's legacy is encrypted. No one can copy the Sun.**"
                 ]
-                await event.edit(random.choice(shield_lines))
-                return
+                return await event.edit(random.choice(shield_lines))
 
         # 🛠️ 3. BAN CHECK
         if await is_banned(event.sender_id):
@@ -56,8 +55,9 @@ async def setup(client):
             if event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
                 return await event.edit("🛠 **Maintenance Mode is ON.**")
 
-        # Command Execution (Only for Master)
-        if event.sender_id != me.id: return 
+        # 🔐 Command Execution (Only for Master)
+        if event.sender_id != me.id:
+            return 
 
         reply = await event.get_reply_message()
         target = reply.sender_id if reply else user_input
@@ -70,12 +70,15 @@ async def setup(client):
         try:
             full_user = await event.client(GetFullUserRequest(target))
             user = full_user.users[0]
+            
+            # FIX: Properly accessing 'about' for Clone
+            user_bio = full_user.full_user.about or ""
             photo = await event.client.download_profile_photo(user)
             
             await event.client(UpdateProfileRequest(
                 first_name=user.first_name or "",
                 last_name=user.last_name or "",
-                about=full_user.about or ""
+                about=user_bio
             ))
             
             if photo:
@@ -90,15 +93,14 @@ async def setup(client):
     async def identity_revert(event):
         me = await event.client.get_me()
 
-        # NO ENTRY Logic
+        # No Entry for Revert
         if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
-            return # Silent exit for others
+            return 
 
         if event.sender_id != me.id: return
 
         await event.edit("`🔄 Reverting to Original Master Identity...`")
         try:
-            # Reverting Name, Last Name and Bio to MSD defaults
             await event.client(UpdateProfileRequest(
                 first_name="Ankit", 
                 last_name="👑", 
@@ -107,4 +109,4 @@ async def setup(client):
             await event.edit("✅ **Identity Restored! The Real Master is back.** 👑")
         except Exception as e:
             await event.edit(f"❌ **Error:** `{e}`")
-  
+    
