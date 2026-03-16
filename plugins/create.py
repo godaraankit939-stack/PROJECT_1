@@ -52,15 +52,18 @@ async def create_handler(event):
     await event.edit(f"`🛠 Creating Group: {group_name}...`")
 
     try:
-        # 🚀 GROUP CREATION LOGIC
-        # Telethon ka InviteToGroupRequest use karke group banta hai
+        # 🚀 𝖲𝖠𝖪𝖳𝖨: Group Creation Logic Fix
         result = await client(functions.messages.CreateChatRequest(
-            users=[me.id], # Self-add
+            users=[me.id], 
             title=group_name
         ))
         
-        # Naye group ki ID aur info nikalna
+        # 'result' updates object hai, usme se naye group ki ID nikalna
         new_group_id = result.chats[0].id
+        
+        # 𝖲𝖠𝖪𝖳𝖨: Wait for server synchronization
+        await asyncio.sleep(2)
+
         now = datetime.now()
         time_str = now.strftime("%H:%M:%S")
         date_str = now.strftime("%d-%m-%Y")
@@ -73,9 +76,11 @@ async def create_handler(event):
             f"◈ **Time:** `{time_str}`\n\n"
             f"**Powered By DARK-USERBOT** 💀"
         )
+        
+        # 𝖲𝖠𝖪𝖳𝖨: Peer check ke saath message bhejna
         await client.send_message(new_group_id, welcome_text)
 
-        await event.edit(f"✅ **Group `{group_name}` Created!** Check your chats.")
+        await event.edit(f"✅ **Group `{group_name}` Created!**\nID: `{new_group_id}`")
 
     except Exception as e:
         await event.edit(f"❌ **Error while creating group:** `{e}`")
@@ -83,4 +88,4 @@ async def create_handler(event):
 # --- SETUP FUNCTION ---
 async def setup(client):
     client.add_event_handler(create_handler)
-
+    
