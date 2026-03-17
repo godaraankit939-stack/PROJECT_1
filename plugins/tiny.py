@@ -46,20 +46,21 @@ async def tiny_handler(event):
 
         # ================= PHOTO =================
         if reply.photo:
-    img = Image.open(input_path).convert("RGB")
+            img = Image.open(input_path).convert("RGB")
 
-    w, h = img.size
-    img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
+            w, h = img.size
+            img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
 
-    output_file = "tiny.jpg"
-    img.save(output_file, "JPEG", quality=90)
+            output_file = "tiny.jpg"
+            img.save(output_file, "JPEG", quality=90)
 
-    await client.send_file(
-        event.chat_id,
-        output_file,
-        reply_to=event.reply_to_msg_id,
-        force_document=True   # 🔥 FIX
-    )
+            await client.send_file(
+                event.chat_id,
+                output_file,
+                reply_to=event.reply_to_msg_id,
+                force_document=True
+            )
+
         # ================= STATIC STICKER =================
         elif reply.sticker and reply.sticker.mime_type == "image/webp":
             img = Image.open(input_path).convert("RGBA")
@@ -80,7 +81,6 @@ async def tiny_handler(event):
         else:
             resized_video = "tiny.mp4"
 
-            # 🎞️ Resize via ffmpeg
             subprocess.run([
                 "ffmpeg",
                 "-y",
@@ -89,10 +89,8 @@ async def tiny_handler(event):
                 resized_video
             ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-            # 🤖 Send to converter bot
             await client.send_file(CONVERTER_BOT, resized_video)
 
-            # ⏳ wait for bot response
             await asyncio.sleep(7)
 
             msgs = await client.get_messages(CONVERTER_BOT, limit=1)
@@ -100,7 +98,6 @@ async def tiny_handler(event):
             if not msgs or not msgs[0].sticker:
                 return await event.edit("`Conversion bot failed. Try again.`")
 
-            # 📤 Send final sticker back
             await client.send_file(
                 event.chat_id,
                 msgs[0].media,
@@ -113,7 +110,6 @@ async def tiny_handler(event):
         await event.edit(f"`Error: {str(e)}`")
 
     finally:
-        # 🧹 CLEANUP
         try:
             if input_path and os.path.exists(input_path):
                 os.remove(input_path)
