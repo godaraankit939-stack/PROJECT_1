@@ -51,24 +51,6 @@ async def google_search(event):
 
     final_info = ""
 
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        url = "https://www.google.com/search?q=" + query.replace(" ", "+")
-        res = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-
-        results = []
-        for g in soup.find_all("div"):
-            text = g.get_text()
-            if len(text) > 50 and text not in results:
-                results.append(text)
-
-        if results:
-            final_info = "\n\n".join(results[:3])
-    except:
-        pass
-
-    if not final_info:
         try:
             d_url = "https://api.duckduckgo.com/?q=" + query.replace(' ', '+') + "&format=json"
             d_res = requests.get(d_url, timeout=10).json()
@@ -88,6 +70,23 @@ async def google_search(event):
                 final_info = w_res["extract"]
         except:
             pass
+            
+        try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        url = "https://www.google.com/search?q=" + query.replace(" ", "+")
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        results = []
+        for g in soup.find_all("div"):
+            text = g.get_text()
+            if len(text) > 50 and text not in results:
+                results.append(text)
+
+        if results:
+            final_info = "\n\n".join(results[:3])
+    except:
+        pass
 
     if not final_info:
         final_info = "Try refining your query."
@@ -96,67 +95,4 @@ async def google_search(event):
     await event.edit(msg[:4095])
 
 
-# ================= ASK CMD (AI ONLY) =================
-@events.register(events.NewMessage(pattern=r"\.ask ?(.*)"))
-async def ask_ai(event):
-    client = event.client
-    me = await client.get_me()
 
-    if await is_banned(event.sender_id):
-        return
-
-    if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
-        return await event.edit("`Maintenance Mode.`")
-
-    if event.sender_id != me.id and not await is_sudo(event.sender_id):
-        return
-
-    query = event.pattern_match.group(1).strip()
-    if not query:
-        return await event.edit("`Ask something...`")
-
-    await event.edit("`🤖 Thinking...`")
-
-    response_text = ""
-
-    # 🔥 OpenAI
-    if OPENAI_API_KEY:
-        try:
-            res = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "gpt-4o-mini",
-                    "messages": [{"role": "user", "content": query}]
-                },
-                timeout=10
-            ).json()
-
-            response_text = res["choices"][0]["message"]["content"]
-        except:
-            pass
-
-    # 🔥 Gemini fallback
-    if not response_text and GEMINI_API_KEY:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-            res = requests.post(url, json={
-                "contents": [{"parts": [{"text": query}]}]
-            }, timeout=10).json()
-
-            response_text = res["candidates"][0]["content"]["parts"][0]["text"]
-        except:
-            pass
-
-    if not response_text:
-        response_text = "AI not responding. Check API keys."
-
-    await event.edit(response_text[:4095])
-
-
-async def setup(client):
-    client.add_event_handler(google_search)
-    client.add_event_handler(ask_ai)
