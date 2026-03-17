@@ -46,20 +46,20 @@ async def tiny_handler(event):
 
         # ================= PHOTO =================
         if reply.photo:
-            img = Image.open(input_path).convert("RGB")
+    img = Image.open(input_path).convert("RGB")
 
-            w, h = img.size
-            img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
+    w, h = img.size
+    img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
 
-            output_file = "tiny.jpg"
-            img.save(output_file, "JPEG", quality=90)
+    output_file = "tiny.jpg"
+    img.save(output_file, "JPEG", quality=90)
 
-            await client.send_file(
-                event.chat_id,
-                output_file,
-                reply_to=event.reply_to_msg_id
-            )
-
+    await client.send_file(
+        event.chat_id,
+        output_file,
+        reply_to=event.reply_to_msg_id,
+        force_document=True   # 🔥 FIX
+    )
         # ================= STATIC STICKER =================
         elif reply.sticker and reply.sticker.mime_type == "image/webp":
             img = Image.open(input_path).convert("RGBA")
