@@ -9,11 +9,12 @@ from config import OWNER_ID
 AURA_URL = "https://raw.githubusercontent.com/Ankit/DARK-USERBOT/main/auralines.txt"
 
 def get_remote_aura():
+    """Fetches aura lines with a timeout to prevent bot hangs."""
     try:
         response = requests.get(AURA_URL, timeout=5)
         if response.status_code == 200:
             return [line.strip() for line in response.text.split('\n') if line.strip()]
-    except:
+    except Exception:
         pass
     return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤𝖣** 🛡️"]
 
@@ -22,63 +23,65 @@ async def lyrics_handler(event):
     client = event.client
     me = await client.get_me()
 
-    # 🛡️ 1. NO ENTRY LOGIC (Professional Style)
+    # 🛡️ 1. NO ENTRY LOGIC (Forceful Edit for Unauthorized Users in Owner Chat)
     if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
         aura_list = get_remote_aura()
-        for line in random.sample(aura_list, min(3, len(aura_list))):
+        selected_aura = random.sample(aura_list, min(3, len(aura_list)))
+        for line in selected_aura:
             await event.edit(line)
             await asyncio.sleep(1.5)
         return
 
-    # 🛠️ 2. BAN & MAINTENANCE CHECK
-    if await is_banned(event.sender_id): return
+    # 🛠️ 2. BAN CHECK
+    if await is_banned(event.sender_id):
+        return
+
+    # 🛠️ 3. MAINTENANCE CHECK
     if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
-        return await event.edit("`Status: Maintenance Mode Active.`")
+        return await event.edit("`System Status: Maintenance Mode Active.`")
+    
+    # 🛠️ 4. AUTHORIZATION CHECK (Only Owner or Sudo)
+    if event.sender_id != me.id and not await is_sudo(event.sender_id):
+        return
 
     song_name = event.pattern_match.group(1).strip()
     if not song_name:
-        return await event.edit("`Error: Please provide a song name!`")
+        return await event.edit("`Error: Please provide a song name (e.g., .lyrics Daku).`")
 
     await event.edit(f"`🎵 Searching lyrics for: {song_name}...`")
 
     try:
-        # 🚀 Direct Lyrics API (No Google Scraping)
-        # Using a reliable public API for faster results
-        url = f"https://lyrist.vercel.app/api/{song_name.replace(' ', '%20')}"
-        response = requests.get(url, timeout=10).json()
-
-        if "lyrics" not in response or not response["lyrics"]:
-            return await event.edit("`Error: Lyrics not found for this song.`")
-
-        title = response.get("title", song_name.upper())
-        artist = response.get("artist", "Unknown Artist")
-        lyrics_text = response["lyrics"]
-
-        # 📋 Formatting: Professional Code Box Format
-        # Hum lyrics ko monospace me rakhenge taaki help menu jaisa look aaye
-        header = f"╔══════════════════╗\n║  ❁ 𝖫𝖸𝖱𝖨𝖢𝖲 𝖥𝖮𝖴𝖭𝖣 ❁  ║\n╚══════════════════╝\n"
-        meta = f"➶ **Song:** `{title}`\n➶ **Artist:** `{artist}`\n\n"
+        # Fetching lyrics from Lyrist API
+        api_url = "https://lyrist.vercel.app/api/" + song_name.replace(' ', '%20')
+        res = requests.get(api_url, timeout=10)
         
-        # Code format wrapper
-        formatted_lyrics = f"```\n{lyrics_text}\n```"
+        if res.status_code != 200:
+            return await event.edit("`Error: Lyrics source is currently unreachable.`")
+            
+        data = res.json()
+        if "lyrics" not in data or not data["lyrics"]:
+            return await event.edit("`Error: No lyrics found for this song.`")
+
+        title = data.get("title", song_name.upper())
+        artist = data.get("artist", "Unknown Artist")
+        lyrics_text = data["lyrics"]
+
+        # Construction of the final message using concatenation to avoid f-string issues
+        header = "╔══════════════════╗\n║  ❁ 𝖫𝖸𝖱𝖨𝖢𝖲 𝖥𝖮𝖴𝖭𝖣 ❁  ║\n╚══════════════════╝\n"
+        meta = "**Song:** `" + str(title) + "`\n**Artist:** `" + str(artist) + "`\n\n"
         
-        final_output = f"{header}{meta}{formatted_lyrics}\n\n**Powered By DARK-USERBOT** 💀"
+        # Limit lyrics length to avoid Telegram message limits
+        if len(lyrics_text) > 3500:
+            lyrics_text = lyrics_text[:3500] + "\n... (Lyrics truncated)"
+            
+        # Wrapping lyrics in a code block for a compact, professional look
+        code_block = "```\n" + str(lyrics_text) + "\n```"
+        
+        final_msg = header + meta + code_block + "\n\n**Powered By DARK-USERBOT** 💀"
+        await event.edit(final_msg)
 
-        # Telegram character limit check
-        if len(final_output) > 4096:
-            await event.edit("`Lyrics are too long! Sending as a snippet...`")
-            final_output = f"{header}{meta}
-http://googleusercontent.com/immersive_entry_chip/0
+    except Exception as e:
+        await event.edit("❌ **Lyrics Failure:** `" + str(e) + "`")
 
-### 📋 Is Code Mein Kya Alag Hai?
-1.  **Non-Google Fetching:** Hum `lyrist` API ka use kar rahe hain jo seedha text format mein lyrics deta hai, isliye "No Result" aane ke chances kam hain.
-2.  **Compact Code Format:** Lyrics ko ` ``` ` (triple backticks) mein dala gaya hai. Isse font chota aur professional dikhta hai, bilkul tumhare help menu ki tarah.
-3.  **Header Styling:** Ek professional box header dala hai jo DARK-USERBOT ki theme se match karta hai.
-4.  **Security Layers:** No-Entry, Ban check aur Timeout isme bhi integrated hain.
-
-Ankit, ab ise deploy karke check karo. Kya ab `.lyrics` ka look aur response waisa hi hai jaisa tum chahte the?
-
-**Batao, ab agla panna konsa kholna hai? Humne info, lyrics, aur triple-engine google sab set kar diya hai.** 🚀🔥
-
-http://googleusercontent.com/action_card_content/1
-                 
+async def setup(client):
+    client.add_event_handler(lyrics_handler)
