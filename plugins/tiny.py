@@ -1,14 +1,10 @@
 import asyncio
 import os
-import subprocess
 from PIL import Image
 from telethon import events
 from database import get_maintenance, is_sudo, is_banned
 from config import OWNER_ID
 
-CONVERTER_BOT = "@VideoStickerzBot"  # ya @VideoStickerzBot
-
-# ================= TINY CMD =================
 @events.register(events.NewMessage(pattern=r"\.tiny$"))
 async def tiny_handler(event):
     client = event.client
@@ -24,15 +20,14 @@ async def tiny_handler(event):
     # 📩 REPLY CHECK
     if not event.is_reply:
         return await event.edit(
-            "`Please reply to a photo or a sticker to use this command professionally.`"
+            "`Please reply to a photo or a sticker.`"
         )
 
     reply = await event.get_reply_message()
 
-    # 🎯 VALIDATION
     if not reply.photo and not reply.sticker:
         return await event.edit(
-            "`Please reply to a photo or a sticker to use this command professionally.`"
+            "`Reply to a photo or sticker.`"
         )
 
     await event.edit("`⚡ Processing...`")
@@ -41,7 +36,6 @@ async def tiny_handler(event):
     output_file = None
 
     try:
-        # 📥 DOWNLOAD
         input_path = await reply.download_media()
 
         # ================= PHOTO =================
@@ -49,16 +43,19 @@ async def tiny_handler(event):
             img = Image.open(input_path).convert("RGB")
 
             w, h = img.size
-            img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
+            new_w, new_h = max(1, w // 2), max(1, h // 2)
+
+            img = img.resize((new_w, new_h), Image.LANCZOS)
 
             output_file = "tiny.jpg"
-            img.save(output_file, "JPEG", quality=90)
+            img.save(output_file, "JPEG", quality=95)
 
+            # 🔥 PHOTO AS PHOTO (NO DOCUMENT)
             await client.send_file(
                 event.chat_id,
                 output_file,
                 reply_to=event.reply_to_msg_id,
-                force_document=True
+                attributes=[]  # force normal image
             )
 
         # ================= STATIC STICKER =================
@@ -77,30 +74,27 @@ async def tiny_handler(event):
                 reply_to=event.reply_to_msg_id
             )
 
-        # ================= ANIMATED STICKER =================
+        # ================= ANIMATED → STATIC STICKER =================
         else:
-            resized_video = "tiny.mp4"
+            # first frame extract
+            img = Image.open(input_path)
 
-            subprocess.run([
-                "ffmpeg",
-                "-y",
-                "-i", input_path,
-                "-vf", "scale=iw/2:ih/2",
-                resized_video
-            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            try:
+                img.seek(0)
+            except:
+                pass
 
-            await client.send_file(CONVERTER_BOT, resized_video)
+            img = img.convert("RGBA")
 
-            await asyncio.sleep(7)
+            w, h = img.size
+            img = img.resize((max(1, w // 2), max(1, h // 2)), Image.LANCZOS)
 
-            msgs = await client.get_messages(CONVERTER_BOT, limit=1)
-
-            if not msgs or not msgs[0].sticker:
-                return await event.edit("`Conversion bot failed. Try again.`")
+            output_file = "tiny.webp"
+            img.save(output_file, "WEBP")
 
             await client.send_file(
                 event.chat_id,
-                msgs[0].media,
+                output_file,
                 reply_to=event.reply_to_msg_id
             )
 
@@ -114,14 +108,5 @@ async def tiny_handler(event):
             if input_path and os.path.exists(input_path):
                 os.remove(input_path)
 
-            for f in ["tiny.jpg", "tiny.webp", "tiny.mp4"]:
-                if os.path.exists(f):
-                    os.remove(f)
-
-        except:
-            pass
-
-
-# ================= SETUP =================
-async def setup(client):
-    client.add_event_handler(tiny_handler)
+            for f in ["tiny.jpg", "tiny.webp"]:
+                if
