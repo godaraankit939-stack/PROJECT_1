@@ -6,7 +6,7 @@ from telethon import events
 from database import get_maintenance, is_sudo, is_banned
 from config import OWNER_ID
 
-CONVERTER_BOT = "@toWebmBot"  # ya @VideoStickerzBot
+CONVERTER_BOT = "@VideoStickerzBot"  # ya @VideoStickerzBot
 
 # ================= TINY CMD =================
 @events.register(events.NewMessage(pattern=r"\.tiny$"))
