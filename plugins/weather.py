@@ -17,12 +17,12 @@ def get_remote_aura():
         pass
     return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤𝖣** 🛡️"]
 
-# ================= WEATHER CMD (WTTR.IN LOGIC) =================
+# ================= WEATHER CMD =================
 @events.register(events.NewMessage(pattern=r"\.weather ?(.*)"))
 async def weather_search(event):
     client = event.client
 
-    # 🛡️ 1. NO ENTRY LOGIC (Exact working logic from history)
+    # 🛡️ 1. NO ENTRY LOGIC
     if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
         aura_list = get_remote_aura()
         selected_aura = random.sample(aura_list, min(3, len(aura_list)))
@@ -31,7 +31,7 @@ async def weather_search(event):
             await asyncio.sleep(1.5) 
         return
 
-    # 🛠️ 2. BAN & MAINTENANCE & SUDO CHECK
+    # 🛠️ 2. SECURITY CHECKS
     if await is_banned(event.sender_id):
         return
     if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
@@ -39,31 +39,38 @@ async def weather_search(event):
 
     place = event.pattern_match.group(1).strip()
     if not place:
-        return await event.edit("`Error: City name ya Pincode toh do?`")
+        return await event.edit("`Error: City name or Pincode required!`")
 
     await event.edit(f"`☁️ Scanning Atmosphere: {place}...`")
 
-    try:
-        # 🚀 WTTR.IN LOGIC: Faster & No Key Required
-        # format: %l (location), %C (condition), %t (temp), %h (humidity), %w (wind)
-        url = f"https://wttr.in/{place}?format=%l:+%C+%t+%h+%w"
-        res = requests.get(url, timeout=10).text
+    # 🚀 3. WTTR LOGIC WITH RETRY
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            # Format: Location, Temp+Condition, Wind, Humidity
+            url = f"https://wttr.in/{place}?format=%l\n🌡️+%t+%C\n💨+Wind:+%w\n💧+Hum:+%h"
+            res = requests.get(url, timeout=8).text
 
-        if "Unknown location" in res or "404" in res:
-            return await event.edit("`❌ Error: Location not found.`")
+            if "Unknown location" in res or "404" in res:
+                return await event.edit("`❌ Error: Location not found!`")
 
-        # 📋 Point-to-Point Clean Result
-        # wttr.in se direct format milta hai, hum use bas header-footer de rahe hain
-        weather_res = (
-            f"☁️ **Weather Report:**\n\n"
-            f"`{res}`\n\n"
-            f"**DARK-USERBOT** 💀"
-        )
-        await event.edit(weather_res)
+            # Point-to-Point Clean Result
+            weather_res = (
+                f"☁️ **Weather Report**\n"
+                f"────────────────\n"
+                f"`{res}`\n"
+                f"────────────────\n"
+                f"💀 **DARK-USERBOT**"
+            )
+            return await event.edit(weather_res)
 
-    except Exception as e:
-        await event.edit(f"`❌ Error: Server busy or {str(e)}`")
-
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+            if attempt < max_retries - 1:
+                await event.edit(f"`⏳ Server busy, Retrying... ({attempt + 1})`")
+                await asyncio.sleep(2)
+                continue
+            else:
+                return await event.edit("`❌ Error: WTTR server busy. Try again later.`")
 
 # ================= SETUP =================
 async def setup(client):
