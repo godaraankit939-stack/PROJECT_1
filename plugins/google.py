@@ -51,7 +51,7 @@ async def google_search(event):
 
     final_info = ""
 
-        try:
+    try:
             d_url = "https://api.duckduckgo.com/?q=" + query.replace(' ', '+') + "&format=json"
             d_res = requests.get(d_url, timeout=10).json()
 
