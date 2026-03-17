@@ -18,16 +18,16 @@ def get_remote_aura():
         pass
     return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤𝖣** 🛡️"]
 
-# ================= TRANSLATE CMD (NO-CGI LOGIC) =================
+# ================= TRANSLATE CMD (CLEAN OUTPUT) =================
 @events.register(events.NewMessage(pattern=r"\.tr ?([a-z]{2})? ?(.*)"))
 async def translate_cmd(event):
-    # 🛡️ 1. NO ENTRY LOGIC (Exact working logic you liked)
+    # 🛡️ 1. NO ENTRY LOGIC
     if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
         aura_list = get_remote_aura()
         selected_aura = random.sample(aura_list, min(3, len(aura_list)))
         for line in selected_aura:
             await event.edit(line)
-            await asyncio.sleep(1.5) # Forceful 5s delay
+            await asyncio.sleep(1.5)
         return
 
     # 🛠️ 2. BAN & MAINTENANCE CHECK
@@ -51,21 +51,21 @@ async def translate_cmd(event):
     await event.edit(f"`🔠 Translating to {dest_lang.upper()}...`")
 
     try:
-        # 🚀 NO-LIBRARY LOGIC: Using direct Google API endpoint
-        # Hum urllib use kar rahe hain jo 'cgi' ka modern replacement hai
+        # 🚀 Direct Google API logic
         encoded_text = urllib.parse.quote(text_to_tr)
         url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={dest_lang}&dt=t&q={encoded_text}"
         
         headers = {"User-Agent": "Mozilla/5.0"}
         res = requests.get(url, headers=headers, timeout=10).json()
         
-        # Google returns a nested list, we join the translated parts
+        # Joining all translated parts
         translated_text = "".join([part[0] for part in res[0] if part[0]])
 
-        # 📋 Clean Output
+        # 📋 Clean Output (Only Result)
+        # Yahan hum status line manually manage kar rahe hain
         final_msg = (
-            f"📥 **Input:** `{text_to_tr[:50]}...`\n"
-            f"📤 **Output ({dest_lang.upper()}):**\n`{translated_text}`\n\n"
+            f"🌐 **Tr to {dest_lang.upper()}:**\n\n"
+            f"`{translated_text}`\n\n"
             f"**DARK-USERBOT** 💀"
         )
         await event.edit(final_msg)
