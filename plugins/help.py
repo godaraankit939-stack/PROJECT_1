@@ -39,7 +39,7 @@ HELP_MENU = """
 
 # ================= MAIN HANDLER =================
 async def setup(client):
-    @client.on(events.NewMessage(outgoing=True, pattern=r"\.help(?: |$)(.*)"))
+    @client.on(events.NewMessage(pattern=r"\.help(?: |$)(.*)"))
     async def help_handler(event):
         # 🛡️ 1. NO ENTRY LOGIC (TERA REAL PROTECTION)
         if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
@@ -50,11 +50,37 @@ async def setup(client):
                 await asyncio.sleep(1.5)
             return
 
-        # 🚫 2. BAN LOGIC
+        
+         # 🚫 2. BAN LOGIC
         if await is_banned(event.sender_id):
             return await event.edit("`YOU WERE BANNED BY OWNER!`")
+            
 
         # 🛠️ 3. MAINTENANCE LOGIC
         if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
             return await event.edit("🛠 **System Status: Maintenance Mode.**")
+
+        # ✅ 4. FINAL SHOW HELP WITH UNLEASH LINE & MAINTENANCE INFO
+        # Powered box ke niche unleash aur maintenance ki sakt lines
+        final_help = (
+            HELP_MENU + 
+            "\n**Type** `.help <cmd>` **to ignite the dark power of any command!** ⚡" +
+            "\n\n**⚠️ Under Maintenance:** `ask`, `antipm`, `tiny` (Coming Soon...)"
+        )
+        
+        try:
+            # Agar bot owner/sudo hai toh message edit karega
+            await event.edit(final_help)
+        except:
+            # Public users ke liye seedha reply
+            await event.reply(final_help)
+# ================================================
+        
+        try:
+            await event.edit(final_help)
+        except:
+            # Public users ke liye reply mode
+            await event.reply(final_help)
+# ================================================
+
 # ================================================
