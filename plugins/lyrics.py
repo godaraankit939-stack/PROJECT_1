@@ -31,9 +31,18 @@ async def lyrics_handler(event):
             await asyncio.sleep(1.5)
         return
 
-    # 🚫 BAN & MAINTENANCE
-    if await is_banned(event.sender_id): return
-    if await get_maintenance() and event.sender_id != OWNER_ID: return
+    # 2. 🚫 BAN LOGIC
+    # Agar user banned hai, toh bot silent rahega.
+    if await is_banned(event.sender_id):
+        # await event.edit("`YOU WERE BANNED BY OWNER!`")
+        return
+
+    # 3. 🛠️ MAINTENANCE LOGIC
+    # Agar maintenance ON hai, toh sirf Tu (Owner) aur Sudo use kar payenge.
+    if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
+        # Optional: Tu yahan message bhi edit karwa sakta hai
+        # await event.edit("`🛠️ System is under Maintenance. Try later!`")
+        return
 
     song_name = event.pattern_match.group(1).strip()
     if not song_name:
