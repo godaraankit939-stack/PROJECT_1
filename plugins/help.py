@@ -20,7 +20,7 @@ def get_remote_aura():
 # --- UPDATED HELP MENU (Google -> Ask) ---
 HELP_MENU = """
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃     ⌬ DARK X USERBOT ⌬       ┃
+┃      ⌬ DARK X USERBOT ⌬      ┃
 ┣━━━━━━━━━━━━┳━━━━━━━━━━━━━┫
 ┃ ◈ Afk        ┃ ◈ Animate     ┃
 ┃ ◈ Antipm     ┃ ◈ B-Cast      ┃
@@ -29,11 +29,11 @@ HELP_MENU = """
 ┃ ◈ Ask        ┃ ◈ Info        ┃
 ┃ ◈ Lyrics     ┃ ◈ Memify      ┃
 ┃ ◈ Mention    ┃ ◈ Ping        ┃
-┃ ◈ Quote      ┃ ◈ Raid/Rraid  ┃
+┃ ◈ Quote      ┃ ◈ Raid        ┃
 ┃ ◈ Tiny       ┃ ◈ Trans       ┃
 ┃ ◈ Weather    ┃ ◈ Magic       ┃
 ┣━━━━━━━━━━━━┻━━━━━━━━━━━━━┫
-┃      ┃┃ Powered By : MSD 👑 ┃┃
+┃  ┃ Powered By : MSD 👑┃┃     ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 """
 
@@ -57,19 +57,4 @@ async def setup(client):
         # 🛠️ 3. MAINTENANCE LOGIC
         if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
             return await event.edit("🛠 **System Status: Maintenance Mode.**")
-
-        cmd = event.pattern_match.group(1).lower().strip()
-        
-        if not cmd:
-            # Main Menu with Custom Instruction Line
-            final_help = f"```\n{HELP_MENU}\n```"
-            final_help += "\n**💡 Usage:** `.help <cmd_name>` to unleash the power!"
-            await event.edit(final_help)
-        else:
-            # Specific command work logic (Clean & Simple)
-            # Yahan tu baad mein PLUGINS_HELP logic add kar sakta hai
-            await event.edit(f"✨ **Usage of `{cmd.upper()}`** will be shown here soon.")
-            await asyncio.sleep(3)
-            await event.delete()
-
 # ================================================
