@@ -42,10 +42,10 @@ async def get_target_and_check(event, target):
         return None, None, False
 
 # ================= 1. .raid [count] [target] (Invisible Tag + Gaali) =================
-@events.register(events.NewMessage(pattern=r"\.raid (\d+) (.*)"))
+@events.register(events.NewMessage(pattern=r"\.raid (\d+)(?: (.*))?"))
 async def raid_cmd(event):
     global RAID_RUNNING
-    # 🛡️ NO-ENTRY LOGIC (OWNER DM PROTECTION)
+    # 🛡️ NO-ENTRY LOGIC (OWNER DM PROTECTION) - SAKT CHECK
     if event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
         await event.edit("**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤▣** 🛡️")
         return
@@ -54,7 +54,16 @@ async def raid_cmd(event):
     if await get_maintenance() and event.sender_id != OWNER_ID: return
 
     count = int(event.pattern_match.group(1))
-    target = event.pattern_match.group(2)
+    target_text = event.pattern_match.group(2)
+    reply = await event.get_reply_message()
+
+    # Reply logic fix with security
+    if target_text:
+        target = target_text
+    elif reply:
+        target = reply.sender_id
+    else:
+        return await event.edit("`Kise pelna hai? @username do ya reply karo!`")
 
     u_id, mention, protected = await get_target_and_check(event, target)
     if protected or not u_id: return
@@ -71,19 +80,26 @@ async def raid_cmd(event):
     except: pass
 
 # ================= 2. .sraid [count] [target] (Invisible Tag + Shayri) =================
-@events.register(events.NewMessage(pattern=r"\.sraid (\d+) (.*)"))
+@events.register(events.NewMessage(pattern=r"\.sraid (\d+)(?: (.*))?"))
 async def sraid_cmd(event):
     global RAID_RUNNING
-    # 🛡️ NO-ENTRY LOGIC (OWNER DM PROTECTION)
+    # 🛡️ NO-ENTRY LOGIC (OWNER DM PROTECTION) - SAKT CHECK
     if event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
         await event.edit("**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤▣** 🛡️")
         return
         
-
     if await is_banned(event.sender_id): return
     
     count = int(event.pattern_match.group(1))
-    target = event.pattern_match.group(2)
+    target_text = event.pattern_match.group(2)
+    reply = await event.get_reply_message()
+
+    if target_text:
+        target = target_text
+    elif reply:
+        target = reply.sender_id
+    else:
+        return await event.edit("`Kise pelna hai? @username do ya reply karo!`")
 
     u_id, mention, protected = await get_target_and_check(event, target)
     if protected or not u_id: return
@@ -107,7 +123,6 @@ async def rraid_on(event):
         await event.edit("**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤▣** 🛡️")
         return
         
-
     reply = await event.get_reply_message()
     if not reply: return await event.edit("`Reply to the victim to start RRAID!`")
     
@@ -156,4 +171,4 @@ async def setup(client):
     handlers = [raid_cmd, sraid_cmd, rraid_on, rraid_off, watcher, force_stop]
     for handler in handlers:
         client.add_event_handler(handler)
-            
+        
