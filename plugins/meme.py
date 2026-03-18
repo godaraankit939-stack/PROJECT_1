@@ -6,25 +6,70 @@ from telethon import events
 
 TENOR_API_KEY = "LIVDSRZULELA"
 
+# 🔥 👉 TERE PURE DESI SOURCES (EXPANDED)
 SEARCH_TERMS = [
-    "indian meme",
-    "babu rao meme",
-    "bollywood reaction meme",
-    "carryminati meme",
-    "akshay kumar meme",
-    "rajpal yadav meme",
-    "funny indian reaction"
+
+# 🎬 MOVIES
+"hera pheri babu rao meme",
+"phir hera pheri meme",
+"welcome nana patekar meme",
+"welcome uday control meme",
+"gangs of wasseypur meme",
+"munna bhai meme jadoo ki jhappi",
+"golmaal vasooli bhai meme",
+"3 idiots all is well meme",
+"dhamaal sanjay mishra meme",
+"ms dhoni movie meme",
+"lagaan meme kachra",
+"bajirao mastani meme ranveer singh",
+"singham aata majhi satakli meme",
+"gunda mithun meme",
+
+# 📺 WEB SERIES
+"mirzapur kaleen bhaiya meme",
+"mirzapur munna bhaiya meme",
+"sacred games gaitonde meme",
+"family man chellam sir meme",
+"panchayat binod meme",
+"scam 1992 harshad mehta meme",
+"shark tank ashneer meme",
+
+# 🎥 YOUTUBERS
+"carryminati meme",
+"bb ki vines titu mama meme",
+"ashish chanchlani meme",
+"triggered insaan meme",
+"flying beast meme",
+"hindustani bhau meme",
+"puneet superstar meme",
+"technical guruji meme",
+"sandeep maheshwari meme",
+
+# 👤 PERSONALITIES
+"narendra modi mitron meme",
+"rahul gandhi meme funny",
+"arvind kejriwal meme",
+"kamlesh soluchan meme",
+"aamir khan interview meme",
+"shashi tharoor english meme",
+
+# 📺 TV SHOWS
+"tmkoc jethalal meme",
+"tmkoc daya meme",
+"cid daya darwaza tod do meme",
+"crime patrol meme",
+"rasode mein kaun tha meme",
+"koffee with karan meme"
 ]
 
 REDDIT_SUBS = [
     "IndianDankMemes",
-    "dankinindia",
-    "memes"
+    "dankinindia"
 ]
 
 # ================= TENOR =================
 
-def get_tenor_meme():
+def get_tenor():
     try:
         query = random.choice(SEARCH_TERMS)
         url = f"https://tenor.googleapis.com/v2/search?q={query}&key={TENOR_API_KEY}&limit=20"
@@ -36,14 +81,13 @@ def get_tenor_meme():
             gif = random.choice(results)
             return gif["media_formats"]["gif"]["url"]
 
-    except Exception as e:
-        print("Tenor Error:", e)
-
+    except:
+        pass
     return None
 
 # ================= REDDIT =================
 
-def get_reddit_meme():
+def get_reddit():
     try:
         sub = random.choice(REDDIT_SUBS)
         url = f"https://meme-api.com/gimme/{sub}"
@@ -53,45 +97,30 @@ def get_reddit_meme():
         if res and "url" in res:
             return res["url"]
 
-    except Exception as e:
-        print("Reddit Error:", e)
-
+    except:
+        pass
     return None
 
-# ================= COMMANDS =================
+# ================= COMMAND =================
 
-# 🔥 MIXED MEME
 @events.register(events.NewMessage(pattern=r"\.meme"))
 async def meme(event):
-    await event.edit("`😂 Fetching Meme...`")
+    await event.edit("`🔥 Desi Meme aa raha hai...`")
 
-    meme_url = get_tenor_meme()
+    # 🔥 1st priority → Tenor (your categories)
+    meme = get_tenor()
 
-    # fallback to reddit
-    if not meme_url:
-        meme_url = get_reddit_meme()
+    # 🔥 fallback → Reddit
+    if not meme:
+        meme = get_reddit()
 
-    if meme_url:
+    if meme:
         await event.delete()
-        return await event.client.send_file(event.chat_id, meme_url)
+        return await event.client.send_file(event.chat_id, meme)
 
-    await event.edit("❌ No meme found")
-
-# 😂 REDDIT ONLY
-@events.register(events.NewMessage(pattern=r"\.rmeme"))
-async def rmeme(event):
-    await event.edit("`🔥 Fetching Reddit Meme...`")
-
-    meme_url = get_reddit_meme()
-
-    if meme_url:
-        await event.delete()
-        return await event.client.send_file(event.chat_id, meme_url)
-
-    await event.edit("❌ No Reddit meme found")
+    await event.edit("❌ Meme nahi mila")
 
 # ================= SETUP =================
 
 async def setup(client):
     client.add_event_handler(meme)
-    client.add_event_handler(rmeme)
