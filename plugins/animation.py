@@ -1,28 +1,27 @@
 import asyncio
-import random  # <--- Ye zaroori hai .toss aur .brain ke liye
-from telethon import events, functions
+import random
+from telethon import events
 from database import is_banned, get_maintenance, is_sudo
 from config import OWNER_ID
-# Universal Auth Check
+
+# Universal Auth Check Helper
 async def is_authorized(event):
     return event.sender_id == OWNER_ID or await is_sudo(event.sender_id)
-    
-# --- 1. TECH, HACKER & FUN SET ---
-    @client.on(events.NewMessage(outgoing=True, pattern=r"^\.(love|hack|nuke|cyber|brain|slap|shoot|kill|ghost|earth|moon|heart|toss|error|server|virus|rain|blow|cum|climax|pounding|sexmsg|bdsm|horny|sex|face|strip)"))
 
-    async def tech_fun_handler(event):
-        # 🛡️ SECURITY & MAINTENANCE CHECK
-        if await is_banned(event.sender_id):
-            return
-        if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
-            return await event.edit("🛠 **Maintenance Mode is ON.**")
-        if not await is_authorized(event):
-            return
+# --- THE MAIN HANDLER FUNCTION ---
+async def animation_handler(event):
+    # 🛡️ SECURITY & MAINTENANCE CHECK
+    if await is_banned(event.sender_id):
+        return
+    if await get_maintenance() and event.sender_id != OWNER_ID and not await is_sudo(event.sender_id):
+        return await event.edit("🛠 **Maintenance Mode is ON.**")
+    if not await is_authorized(event):
+        return
 
-        cmd = event.pattern_match.group(0)[1:]
+    # Extract command without the dot
+    cmd = event.pattern_match.group(1).lower()
 
-        # --- Pehle wali commands (love, hack, nuke, cyber, brain, slap, shoot, moon, heart, toss, virus) yahan rahengi ---
-
+    try:
         if cmd == "kill":
             for s in ["⌬ `Target Locked...` 🎯", "⌬ `Sharpening Blade...` 🔪", "⌬ `Savouring Fear...` 👅", "💀 `Target Executed.`"]:
                 await event.edit(s); await asyncio.sleep(1.5)
@@ -46,9 +45,8 @@ async def is_authorized(event):
         elif cmd == "rain":
             for _ in range(3):
                 for r in [" . ☁️ . ", " , . | . , ", " | . | | | "]:
-                    await event.edit(f"**⌬ 𝖱𝖠𝖨𝖭𝖨𝖭𝖦 𝖵𝖨𝖡𝖤**\n{r}"); await asyncio.sleep(0.6)
+                    await event.edit(f"**⌬ 𝖱𝖠𝖨𝖭𝖨𝖦 𝖵𝖨𝖡𝖤**\n{r}"); await asyncio.sleep(0.6)
             await event.edit("🌧️ `Relax, it's raining.`")
-          
 
         elif cmd == "love":
             colors = ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎"]
@@ -56,13 +54,14 @@ async def is_authorized(event):
                 for h in colors:
                     shape = f" {h}{h}     {h}{h} \n{h}{h}{h}{h}{h}{h}{h}\n {h}{h}{h}{h}{h}{h} \n  {h}{h}{h}{h}{h}  \n    {h}{h}{h}    \n      {h}      "
                     await event.edit(f"**⌬ 𝖲𝖸𝖲𝖳𝖤𝖬 𝖨𝖭 𝖫𝖮𝖵𝖤**\n\n{shape}"); await asyncio.sleep(0.3)
-        
+
         elif cmd == "hack":
             for s in ["⌬ `Connecting...` 📡", "⌬ `Bypassing Firewall...` 🛡️", "⌬ `Fetching Data...` 📂", "**⌬ 𝖲𝖸𝖲▵▤𝖬 𝖧𝖠𝖢𝖪𝖤𝖣** 💀"]:
                 await event.edit(s); await asyncio.sleep(1.5)
 
         elif cmd == "nuke":
-            for i in range(3,0,-1): await event.edit(f"🚀 **𝖭𝖴𝖪𝖤 𝖨𝖭: `{i}`**"); await asyncio.sleep(1)
+            for i in range(3,0,-1): 
+                await event.edit(f"🚀 **𝖭𝖴𝖪𝖤 𝖨𝖭: `{i}`**"); await asyncio.sleep(1)
             await event.edit("💥 **𝖡𝖮𝖮𝖮▵▵▬!** \n`Area Erased.`")
 
         elif cmd == "cyber":
@@ -99,32 +98,15 @@ async def is_authorized(event):
         elif cmd == "virus":
             for s in ["👾 `Injecting Virus-X...` ", "🔓 `Stripping Security...` ", "💀 `System Overridden.` "]:
                 await event.edit(s); await asyncio.sleep(1.5)
-          
-       # 1. THE BDSM (The Dominator)
+
         elif cmd == "bdsm":
-            steps = [
-                "1. `On your knees, slave.` 🧎",
-                "2. `Tightening the chains...` ⛓️",
-                "3. `No mercy, only pleasure...` 🩸",
-                "4. `Obey the Master.` 👑",
-                "**⌬ 𝖲𝖨𝖫𝖤𝖭𝖢𝖤 𝖨𝖲 𝖸𝖮𝖴▵ 𝖮𝖭𝖫𝖸 𝖲𝖠𝖥𝖤 𝖶𝖮𝖱𝖣.** 💀"
-            ]
-            for s in steps:
+            for s in ["1. `On your knees, slave.` 🧎", "2. `Tightening the chains...` ⛓️", "3. `No mercy, only pleasure...` 🩸", "4. `Obey the Master.` 👑", "**⌬ 𝖲𝖨𝖫𝖤𝖭𝖢𝖤 𝖨𝖲 𝖸𝖮𝖴▵ 𝖮𝖭𝖫𝖸 𝖲𝖠𝖥𝖤 𝖶𝖮𝖱𝖣.** 💀"]:
                 await event.edit(s); await asyncio.sleep(1.5)
 
-        # 2. HORNY MODE (The Heat)
         elif cmd == "horny":
-            steps = [
-                "1. `Vibrating at 100%...` ⚡",
-                "2. `Getting wet... with blood?` 🩸",
-                "3. `Harder... Faster... Better.` 🌀",
-                "4. **⌬ 𝖲𝖸𝖲𝖳𝖤𝖬 𝖨𝖲 𝖥𝖴*𝖪𝖨𝖭𝖦 𝖧𝖮𝖳!** 🔥",
-                "**⌬ 𝖳▵𝖬𝖤 𝖳𝖮 𝖤𝖷𝖯𝖫𝖮𝖣𝖤.** 💦"
-            ]
-            for s in steps:
+            for s in ["1. `Vibrating at 100%...` ⚡", "2. `Getting wet... with blood?` 🩸", "3. `Harder... Faster... Better.` 🌀", "4. **⌬ 𝖲𝖸𝖲𝖳𝖤𝖬 𝖨𝖲 𝖥𝖴*𝖪𝖨𝖭𝖦 𝖧𝖮𝖳!** 🔥", "**⌬ 𝖳▵𝖬𝖤 𝖳𝖮 𝖤𝖷𝖯𝖫𝖮𝖣𝖤.** 💦"]:
                 await event.edit(s); await asyncio.sleep(1.5)
 
-        # --- Baaki Short Art Commands ---
         elif cmd == "blow":
             for s in ["8=D", "8==D", "8===D", "8====D💦👅"]:
                 await event.edit(f"**{s}**"); await asyncio.sleep(0.8)
@@ -142,42 +124,13 @@ async def is_authorized(event):
             
         elif cmd == "sexmsg":
             await event.edit("𓀐𓂸🤰🏻 🤱🏻👨‍👩‍👧")
-        
-    # --- 3. HEAVY DOT ART (.sex, .face, .strip) ---
 
-        # 1. THE FULL ACT (.sex)
-        elif cmd == "sex":
-            # Braille Frames for Action
-            f1 = "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀\n`Positioning...` 🛠️"
-            f2 = "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣶⣿⣿⣶⣄⠀⠀⠀⠀⠀⠀⠀⠀\n`Getting Closer...` 🔥"
-            f3 = "𓀐𓂸 `Deep Action...` 🔞"
-            f4 = "𓀐𓂸🤰🏻 🤱🏻👨‍👩‍👧 \n**⌬ 𝖲𝖸𝖲𝖳▵𝖬 ▵𝖩𝖠▢▵𝖫𝖠▵𝖤𝖣** 🌊"
-            
-            for f in [f1, f2, f3, f4]:
-                await event.edit(f)
-                await asyncio.sleep(1.5)
+    except Exception as e:
+        print(f"Animation Error: {e}")
 
-        # 2. THE FACE REVEAL (.face)
-        elif cmd == "face":
-            # Your detailed Braille Portrait
-            art = (
-                "⠀⠀⠀⠀⠀⢀⣤⠤⠤⠤⠤⠤⠤⠤⠤⠤⠤⢤⣤⣀⣀⡀⠀⠀⠀⠀⠀⠀\n"
-                "⠀⠀⠀⠀⢀⡼⠋⠀⣀⠄⡂⠍⣀⣒⣒⠂⠀⠬⠤⠤⠬⠍⠉⠝⠲⣄⡀⠀⠀\n"
-                "⠀⠀⠀⢀⡾⠁⠀⠊⢔⠕⠈⣀⣀⡀⠈⠆⠀⠀⠀⡍⠁⠀⠁⢂⠀⠈⣷⠀⠀\n"
-                "🔞 **⌬ 𝖣𝖨▵𝖳▵ 𝖥𝖠▢▵ 𝖣▵▵▵𝖳▵𝖣**"
-            )
-            await event.edit(art)
-
-        # 3. THE STRIP SHOW (.strip)
-        elif cmd == "strip":
-            # Girl outline transition frames
-            s1 = "⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⠤⠤⠠⡖⠲⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀\n`Unlocking Desires...` 🔓"
-            s2 = (
-                "⠀⠀⠀⠀⠀⡠⠶⣴⣶⣄⠀⠀⠀⢀⣴⣞⣼⣴⣖⣶⣾⡷⣶⣿⣿⣷\n"
-                "⠀⠀⠀⠀⢸⠀⠀⠀⠙⢟⠛⠴⣶⣿⣿⠟⠙⣍⠑⢌⠙⢵⣝⢿⣽⡮⣎⢿\n"
-                "**🔞 𝖲𝖳▵𝖨𝖯𝖯▨𝖭𝖦 𝖢▮𝖬𝖯𝖫▵▵𝖤** 🔥"
-            )
-            for s in [s1, s2]:
-                await event.edit(s)
-                await asyncio.sleep(1.8)
-                      
+# --- MANDATORY SETUP FUNCTION ---
+async def setup(client):
+    # Regex for all commands
+    pattern = r"^\.(love|hack|nuke|cyber|brain|slap|shoot|kill|ghost|earth|moon|heart|toss|error|server|virus|rain|blow|cum|climax|pounding|sexmsg|bdsm|horny|sex|face|strip)$"
+    client.add_event_handler(animation_handler, events.NewMessage(outgoing=True, pattern=pattern))
+    
