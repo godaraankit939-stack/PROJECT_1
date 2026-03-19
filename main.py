@@ -147,7 +147,23 @@ async def panel_handler(event):
     msg = f"💻 **DARK CONTROL PANEL**\n\n👤 Clones: `{len(sessions)}` \n🛡️ Sudo: `{len(sudo_users)}` \n🛠 Maint: `{maint_status}`"
     await event.reply(msg)
 
-# ================= RUN =================
+# ================= THE SAKT RUNNER =================
 
-bot.start(bot_token=config.BOT_TOKEN)
-bot.run_until_disconnected()
+async def start_empire():
+    # 1. Bot ko start karega (Awaited logic)
+    await bot.start(bot_token=config.BOT_TOKEN)
+    # 2. Bot ko zinda rakhega jab tak tu band na kare
+    await bot.run_until_disconnected()
+
+if __name__ == '__main__':
+    # Naya event loop create karke current thread ko assign karna
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # Empire shuru!
+        loop.run_until_complete(start_empire())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.close()
+        
