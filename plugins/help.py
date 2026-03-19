@@ -32,6 +32,7 @@ HELP_MENU = """
 ┃ ◈ Quote       ◈ Raid         ┃
 ┃ ◈ Tiny        ◈ Trans        ┃
 ┃ ◈ Weather     ◈ Magic        ┃
+┃ ◈ Flirt       ◈ Autotr       ┃
 ┣━━━━━━━━━━━━┻━━━━━━━━━━━━━┫
 ┃ Powered By : MSD 👑          ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛
