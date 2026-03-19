@@ -1,2 +1,2 @@
 # Sudo User IDs
-SUDO_USERS = [] 
+SUDO_USERS = [7218307271] 
