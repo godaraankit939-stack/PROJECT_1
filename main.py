@@ -5,9 +5,11 @@ import glob
 import importlib.util
 from telethon import TelegramClient, events, Button
 from telethon.sessions import StringSession
+from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.errors import (
     PhoneNumberInvalidError, PhoneCodeInvalidError, 
-    PhoneCodeExpiredError, SessionPasswordNeededError, PasswordHashInvalidError
+    PhoneCodeExpiredError, SessionPasswordNeededError, PasswordHashInvalidError,
+    UserNotParticipantError
 )
 # Config aur Database se functions uthana
 from config import API_ID, API_HASH, BOT_TOKEN, START_MSG, LOGIN_SUCCESS, OWNER_ID
@@ -28,6 +30,10 @@ keep_alive()
 # Bot Client Initialize - Manager Bot
 bot = TelegramClient('manager_session', API_ID, API_HASH)
 
+# --- FORCE JOIN CONFIG ---
+AUTH_CHATS = ["dark_uploads", -1002341933066] # Username aur Private ID
+INVITE_LINKS = ["https://t.me/dark_uploads", "https://t.me/+Da6Oc_soDHA2YjE1"]
+
 # --- MAINTENANCE CHECK HELPER ---
 async def is_maint(user_id):
     if user_id == OWNER_ID or await is_sudo(user_id):
@@ -38,13 +44,46 @@ async def is_maint(user_id):
 
 @bot.on(events.NewMessage(pattern='/start'))
 async def start(event):
+    if not event.is_private: return
     # Ban check logic
     if await is_banned(event.sender_id):
         return await event.reply("❌ **You are banned from using this bot.**")
     # Maintenance check logic
     if await is_maint(event.sender_id):
         return await event.reply("🚧 **Bot is under Maintenance Mode.**")
+    
+    user_id = event.sender_id
+    # Force Join Check
+    for chat in AUTH_CHATS:
+        try:
+            await bot(GetParticipantRequest(channel=chat, participant=user_id))
+        except UserNotParticipantError:
+            msg = "👑 **WELCOME TO DARK EMPIRE** 👑\n\nBhai, aage badhne ke liye dono groups join karle tabhi bot chalega!"
+            buttons = [
+                [Button.url("📢 Join Channel", INVITE_LINKS[0])],
+                [Button.url("👥 Join Group", INVITE_LINKS[1])],
+                [Button.inline("✅ Verify & Start", data="verify_join")]
+            ]
+            return await event.reply(msg, buttons=buttons)
+        except Exception:
+            continue
+
     await event.reply(START_MSG, parse_mode='md')
+
+# --- CALLBACK FOR VERIFY BUTTON ---
+@bot.on(events.CallbackQuery(data="verify_join"))
+async def verify_callback(event):
+    user_id = event.sender_id
+    for chat in AUTH_CHATS:
+        try:
+            await bot(GetParticipantRequest(channel=chat, participant=user_id))
+        except UserNotParticipantError:
+            return await event.answer("❌ Abe pehle dono join toh kar! Shana mat ban.", alert=True)
+        except Exception:
+            continue
+    
+    await event.delete()
+    await bot.send_message(user_id, START_MSG, parse_mode='md')
 
 @bot.on(events.NewMessage(pattern='/alive'))
 async def bot_alive(event):
@@ -57,6 +96,15 @@ async def host_handler(event):
     if await is_banned(event.sender_id): return
     if await is_maint(event.sender_id): return await event.reply("🚧 Maintenance ON!")
     
+    # Check F-Join before hosting
+    user_id = event.sender_id
+    for chat in AUTH_CHATS:
+        try:
+            await bot(GetParticipantRequest(channel=chat, participant=user_id))
+        except UserNotParticipantError:
+            return await event.reply("❌ **Pehle /start karke channels join karo!**")
+        except: continue
+
     async with bot.conversation(event.chat_id) as conv:
         await conv.send_message("📲 **Please send your Phone Number with Country Code.**\nExample: `+919876543210`")
         
@@ -106,6 +154,6 @@ async def host_handler(event):
         await conv.send_message(LOGIN_SUCCESS)
         await client.disconnect()
 
-# --- CLONE COMMAND (String Support) ---
-@bot.on(events
-        
+# --- RUN BOT ---
+bot.start(bot_token=BOT_TOKEN)
+bot.run_until_disconnected()
