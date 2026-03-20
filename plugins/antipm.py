@@ -57,8 +57,9 @@ async def antipm_handler(event):
         return
 
     # ✅ ALLOW: BOT / SUDO
-    if event.is_bot or await is_sudo(sender_id):
-        return
+    sender = await event.get_sender()
+if (sender and sender.bot) or await is_sudo(event.sender_id):
+    
 
     # ✅ CONTACT CHECK (FIXED)
     try:
