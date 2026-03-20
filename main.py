@@ -1,42 +1,15 @@
-import os
+Import os
 import asyncio
 import sys
 import glob
 import importlib.util
-from flask import Flask
-from threading import Thread
-
-# 1. PEHLE FLASK (RENDER FIX)
-app = Flask('')
-@app.route('/')
-def home():
-    return "I am alive"
-
-def run_port():
-    try:
-        port = int(os.environ.get('PORT', 8080))
-        app.run(host='0.0.0.0', port=port)
-    except Exception as e:
-        print(f"Flask Error: {e}")
-
-def keep_alive():
-    t = Thread(target=run_port)
-    t.daemon = True
-    t.start()
-
-# Flask ko start karo
-keep_alive()
-
-# 2. AB SARE TELETHON IMPORTS (EK SAATH)
 from telethon import TelegramClient, events, Button
 from telethon.sessions import StringSession
-from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.errors import (
-    PhoneNumberInvalidError, PhoneCodeInvalidError, UserNotParticipantError,
+    PhoneNumberInvalidError, PhoneCodeInvalidError, 
     PhoneCodeExpiredError, SessionPasswordNeededError, PasswordHashInvalidError
 )
-
-# 3. CONFIG & DATABASE
+# Config aur Database se functions uthana
 from config import API_ID, API_HASH, BOT_TOKEN, START_MSG, LOGIN_SUCCESS, OWNER_ID
 from database import (
     save_session, is_sudo, ban_user, unban_user, 
@@ -44,62 +17,29 @@ from database import (
     get_all_sessions, get_sudo_list
 )
 
+# Render fix: ensures config/database are found
 sys.path.append(os.getcwd())
+
+# Bot Client Initialize - Manager Bot
 bot = TelegramClient('manager_session', API_ID, API_HASH)
 
-# --- BAAKI KA PURANA CODE (FORCE JOIN & HANDLERS) YAHAN SE SHURU KARO ---
-
-# --- FORCE JOIN CONFIG ---
-AUTH_CHATS = ["dark_uploads", -1002341933066]
-INVITE_LINKS = ["https://t.me/dark_uploads", "https://t.me/+Da6Oc_soDHA2YjE1"]
-
-# --- HELPERS ---
-
+# --- MAINTENANCE CHECK HELPER ---
 async def is_maint(user_id):
     if user_id == OWNER_ID or await is_sudo(user_id):
         return False
     return await get_maintenance()
 
-async def check_fjoin(user_id):
-    """Checks if user joined both required chats"""
-    if user_id == OWNER_ID: return True
-    for chat in AUTH_CHATS:
-        try:
-            await bot(GetParticipantRequest(channel=chat, participant=user_id))
-        except UserNotParticipantError:
-            return False
-        except Exception:
-            continue
-    return True
-
 # --- MANAGER BOT HANDLERS ---
 
 @bot.on(events.NewMessage(pattern='/start'))
 async def start(event):
+    # Ban check logic
     if await is_banned(event.sender_id):
         return await event.reply("❌ **You are banned from using this bot.**")
-    
-    # Force Join Check
-    if not await check_fjoin(event.sender_id):
-        msg = "👑 **WELCOME TO DARK EMPIRE** 👑\n\nTo use this bot, you must join our channels first!"
-        buttons = [
-            [Button.url("📢 Join Channel", INVITE_LINKS[0])],
-            [Button.url("👥 Join Group", INVITE_LINKS[1])],
-            [Button.inline("✅ Verify & Start", data="verify_join")]
-        ]
-        return await event.reply(msg, buttons=buttons)
-
+    # Maintenance check logic
     if await is_maint(event.sender_id):
         return await event.reply("🚧 **Bot is under Maintenance Mode.**")
     await event.reply(START_MSG, parse_mode='md')
-
-@bot.on(events.CallbackQuery(data="verify_join"))
-async def verify_callback(event):
-    if await check_fjoin(event.sender_id):
-        await event.delete()
-        await bot.send_message(event.sender_id, START_MSG)
-    else:
-        await event.answer("❌ Join both channels first!", alert=True)
 
 @bot.on(events.NewMessage(pattern='/alive'))
 async def bot_alive(event):
@@ -110,8 +50,6 @@ async def bot_alive(event):
 @bot.on(events.NewMessage(pattern='/host'))
 async def host_handler(event):
     if await is_banned(event.sender_id): return
-    if not await check_fjoin(event.sender_id):
-        return await event.reply("❌ Join channels first using /start")
     if await is_maint(event.sender_id): return await event.reply("🚧 Maintenance ON!")
     
     async with bot.conversation(event.chat_id) as conv:
@@ -120,7 +58,9 @@ async def host_handler(event):
         number = await conv.get_response()
         phone_number = number.text.replace(" ", "")
         
+        # OTP Status Update
         status_msg = await conv.send_message("📨 **Sending OTP... Please wait.**")
+        
         client = TelegramClient(StringSession(), API_ID, API_HASH)
         await client.connect()
         
@@ -133,6 +73,8 @@ async def host_handler(event):
 
         otp_res = await conv.get_response()
         otp = otp_res.text.replace(" ", "")
+
+        # Login Status Update
         await status_msg.edit("⚙️ **Logging in... Please wait.**")
 
         try:
@@ -149,6 +91,7 @@ async def host_handler(event):
             await status_msg.edit(f"❌ **Login Failed:** `{e}`")
             return
 
+        # Success - Session Store
         session_str = client.session.save()
         user_info = await client.get_me()
         user_id = user_info.id
@@ -162,9 +105,6 @@ async def host_handler(event):
 @bot.on(events.NewMessage(pattern='/clone'))
 async def clone_cmd(event):
     if await is_banned(event.sender_id) or await is_maint(event.sender_id): return
-    if not await check_fjoin(event.sender_id):
-        return await event.reply("❌ Join channels first using /start")
-
     args = event.text.split(" ", 1)
     if len(args) < 2:
         return await event.reply("❌ **Usage:** `/clone <string_session>`")
@@ -234,36 +174,64 @@ async def panel(event):
         await event.reply(msg)
 
 # --- 🚀 MULTI-USERBOT LOADING LOGIC (THE HEART) ---
+
 async def start_userbots():
     sessions = await get_all_sessions()
     print(f"🔎 Found {len(sessions)} sessions. Starting Multi-Userbots...")
     
     for session_str in sessions:
         try:
-            # Agar list aa rahi hai toh second element uthao, warna direct string
-            s_str = session_str[1] if isinstance(session_str, (list, tuple)) else session_str
-            
-            client = TelegramClient(StringSession(s_str), API_ID, API_HASH)
+            # 𝖲𝖠𝖪𝖳𝖨: String session se client create karna
+            client = TelegramClient(StringSession(session_str), API_ID, API_HASH)
             await client.connect()
             
             if await client.is_user_authorized():
-                # --- PLUGINS LOADING (SAKT FIX) ---
-                import plugins
+                me = await client.get_me()
+                
+                # 𝖲𝖠𝖪𝖳𝖨: Plugins load karna aur setup(client) call karna
                 plugin_files = glob.glob("plugins/*.py")
                 for file in plugin_files:
-                    try:
-                        name = f"plugins.{os.path.basename(file)[:-3]}"
-                        spec = importlib.util.spec_from_file_location(name, file)
-                        mod = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(mod)
-                        if hasattr(mod, "setup"):
-                            await mod.setup(client)
-                    except Exception as e:
-                        print(f"⚠️ Plugin {file} failed to load: {e}")
+                    # File se module name banana
+                    module_name = f"plugins.{os.path.basename(file)[:-3]}"
+                    
+                    # Module ko dynamically load karna
+                    spec = importlib.util.spec_from_file_location(module_name, file)
+                    load_mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(load_mod)
+                    
+                    # 𝖲𝖠𝖪𝖳𝖨: Agar module mein setup() function hai toh use call karna
+                    if hasattr(load_mod, "setup"):
+                        await load_mod.setup(client)
                 
-                print(f"✅ Userbot Started!")
+                print(f"✅ Userbot Started for: {me.first_name} (@{me.username})")
             else:
-                print(f"⚠️ Session expired.")
+                print(f"⚠️ Session expired for a user, skipping.")
         except Exception as e:
-            print(f"⚠️ Connection error: {e}")
-            
+            print(f"⚠️ Error starting userbot: {e}")
+
+# --- MAIN RUNNER (PYTHON 3.14+ COMPATIBLE) ---
+
+async def run_everything():
+    print("🛑✨ DARK-USERBOT Engine Starting...")
+    
+    # 1. Start Manager Bot
+    await bot.start(bot_token=BOT_TOKEN)
+    print("📢 Manager Bot is Online!")
+
+    # 2. Start all Userbots from Database
+    await start_userbots()
+
+    # 3. Final Block
+    print("🚀 ALL SYSTEMS ARE LIVE! Bot is running...")
+    await bot.run_until_disconnected()
+
+if __name__ == "__main__":
+    # 𝖲𝖠𝖪𝖳𝖨: Event loop management for latest Python versions
+    try:
+        asyncio.run(run_everything())
+    except (KeyboardInterrupt, SystemExit):
+        print("👋 Bot Stopped!")
+    except RuntimeError:
+        # Fallback for Render/environments where loop is already running
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(run_everything())
