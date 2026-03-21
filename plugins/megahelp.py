@@ -25,7 +25,7 @@ HELP_DICT = {
     "info": "ℹ️ **INFO HELP**\n• `.info [@user/reply]` : Get ID, Name, DC, and Profile details.",
     "b-cast": "ℹ️ **Broadcast HELP**\n• `.bcast [msg/reply to msg]` :Forward msg in one click to all chats.",
     "flirt": "ℹ️ **Flirt HELP**\n• `.flirt [@user/reply]` : To flirt with user.",
-    "Animate: "ℹ️ **Animation HELP**\n• `.animation : To know the list of all animation.",
+    "Animate: "ℹ️ **ANIMATION HELP**\n• `.animation : To know the list of all animation.",
     "ping": "⚡ **PING HELP**\n• `.ping` : Check bot speed/latency.",
     "alive": "👑 **ALIVE HELP**\n• `.alive` : Check if bot is working + System Info.",
     "lyrics": "🎵 **LYRICS HELP**\n• `.lyrics [song name]` : Find full song lyrics.",
