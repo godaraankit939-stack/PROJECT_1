@@ -29,10 +29,11 @@ HELP_MENU = """
 ┃ ◈ Ask         ◈ Info         ┃
 ┃ ◈ Lyrics      ◈ Memify       ┃
 ┃ ◈ Mention     ◈ Ping         ┃
-┃ ◈ Quote       ◈ Raid         ┃
-┃ ◈ Tiny        ◈ Trans        ┃
+┃ ◈ Quotly      ◈ Raid         ┃
+┃ ◈ Tiny        ◈ Translate    ┃
 ┃ ◈ Weather     ◈ Magic        ┃
 ┃ ◈ Flirt       ◈ Autotr       ┃
+┃ ◈ Hot(18+)    ◈ Spam         ┃
 ┣━━━━━━━━━━━━┻━━━━━━━━━━━━━┫
 ┃ Powered By : MSD 👑          ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛
