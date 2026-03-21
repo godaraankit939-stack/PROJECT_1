@@ -95,7 +95,7 @@ async def individual_help(event):
             await event.reply(HELP_DICT[target])
     else:
         # Agar command nahi mili toh error message
-        err_msg = f"❌ `{cmd}` naam ki koi bkc nahi hai system mein!"
+        err_msg = f"❌ `{cmd}` NO PLUGIN FOUND!"
         try:
             await event.edit(err_msg)
             await asyncio.sleep(2)
