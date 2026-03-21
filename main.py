@@ -105,7 +105,7 @@ async def verify_cb(event):
         await event.delete()
         await bot.send_message(event.sender_id, START_MSG)
     else:
-        await event.answer("❌ Teeno join kar pehle! 🤡", alert=True)
+        await event.answer("❌ JOIN ALL CHANNELS! 🤡", alert=True)
 
 @bot.on(events.NewMessage(pattern='/alive'))
 async def bot_alive(event):
