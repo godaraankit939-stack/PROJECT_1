@@ -31,6 +31,24 @@ LINKS = [
 # Button ke upar wala text
 FJOIN_TEXT = "✨ **DARKXUSERBOT**\n\n**JOIN THESE CHANNELS TO CONTINUE 💫**"
 
+# --- 🚀 RENDER FAST-START (FLASK) ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Ꭰᥲʀκ 〤 Usᥱʀʙoᴛ Is ᴀʟɪᴠᥱ!"
+
+def run_flask():
+    # Render hamesha PORT environment variable deta hai
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# Background thread mein Flask chalao
+Thread(target=run_flask).start()
+print("✅ Flask Server Live for Render Health Check!")
+# ------------------------------------
+
+
 # Render fix: ensures config/database are found
 sys.path.append(os.getcwd())
 
