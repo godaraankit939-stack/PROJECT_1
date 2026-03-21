@@ -390,6 +390,8 @@ FLIRT_LINES = [
 LAST_SENT_INDICES = []
 MAX_MEMORY = 100
 
+from telethon.utils import get_display_name
+
 async def flirt_handler(event):
     if event.fwd_from: return
     user_id = event.sender_id
@@ -403,22 +405,31 @@ async def flirt_handler(event):
         if await get_maintenance():
             return await event.reply("🚧 **Maintenance Mode.**")
 
-    # Target Selection
+    # --- TARGET SELECTION (REPLY & USERNAME FIX) ---
     reply = await event.get_reply_message()
     input_str = event.pattern_match.group(1)
+    
+    target_user = None
 
     if reply:
-        target_id = reply.sender_id
+        # Agar reply kiya hai toh seedha reply wale se user uthao
+        target_user = await event.client.get_entity(reply.sender_id)
     elif input_str:
         try:
-            user = await event.client.get_entity(input_str)
-            target_id = user.id
+            target_user = await event.client.get_entity(input_str)
         except:
             return await event.reply("❌ **User nahi mila!**")
     else:
         return await event.reply("ℹ️ **Usage:** Reply to someone or use `.flirt @username`")
 
-    # Random Selection Logic
+    if not target_user:
+        return await event.reply("❌ **User detect nahi ho paya!**")
+
+    target_id = target_user.id
+    # User ka Full Name nikalne ke liye
+    first_name = get_display_name(target_user)
+
+    # --- RANDOM SELECTION ---
     total = len(FLIRT_LINES)
     avail = [i for i in range(total) if i not in LAST_SENT_INDICES]
     if not avail:
@@ -430,12 +441,15 @@ async def flirt_handler(event):
     if len(LAST_SENT_INDICES) > MAX_MEMORY:
         LAST_SENT_INDICES.pop(0)
 
-    # Output
-    mention = f"[\u2063](tg://user?id={target_id})"
-    response = f"{FLIRT_LINES[chosen]} {mention}"
+    # --- OUTPUT (NAME + INVISIBLE MENTION) ---
+    # Isse Full Name aayega aur uske peeche invisible link hogi
+    mention = f"[{first_name}](tg://user?id={target_id})"
+    response = f"{mention}, {FLIRT_LINES[chosen]}"
     
-    if event.out: await event.edit(response)
-    else: await event.reply(response)
+    if event.out: 
+        await event.edit(response)
+    else: 
+        await event.reply(response)
 
 async def setup(client):
     client.add_event_handler(
@@ -443,4 +457,3 @@ async def setup(client):
         events.NewMessage(pattern=r"^\.flirt(?:\s+(.*))?")
     )
     print(f"✅ Mega Flirt Plugin Loaded with {len(FLIRT_LINES)} lines!")
-    
