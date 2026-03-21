@@ -6,12 +6,14 @@ from config import OWNER_ID
 
 # --- THE COMPLETE EMPIRE DATABASE ---
 HELP_DICT = {
+# --- THE COMPLETE EMPIRE DATABASE ---
+HELP_DICT = {
     "raid": "⚔️ **RAID HELP**\n• `.raid [count] [target]`\n• `.sraid [count] [target]`\n• `.rraid` (Reply to start)\n• `.drraid` (Stop RRAID)\n• `.fsraid` (Kill loops)",
     "spam": "🚀 **SPAM HELP**\n• `.spam [count] [text]`\n• `.dmspam [count] [target] [text]`\n• `.fsspam` (Force stop)",
     "purge": "🧹 **PURGE HELP**\n• `.purge [reply]` (All from here)\n• `.purge [count]` (Mix delete)\n• `.purge [count] [reply]` (Upward count)\n• `.purgemy [count]` (Only your msgs)",
     "sudo": "👑 **SUDO HELP**\n• `.sudo [reply/@user]` : Add\n• `.rsudo [reply/@user]` : Remove\n• `.sudos` : Show Empire List",
     "antipm": "🚫 **ANTIPM HELP**\n• `.antipm on/off` : Block/Allow unknown DMs.",
-    "mention": "📢 **MENTION HELP**\n• `.mention @user [text]` : Custom mention.\n• `.tagall [text]` : 5x5 Simple tag.\n• `.tagalle [text]` : 5x5 Emoji tag.\n• `.tagalle : 5x5 Emoji tag.",
+    "mention": "📢 **MENTION HELP**\n• `.mention @user [text]` : Custom mention.\n• `.tagall [text]` : 5x5 Simple tag.\n• `.tagalle [text]` : 5x5 Emoji tag.",
     "tiny": "🖼️ **TINY HELP**\n• `.tiny [reply]` : Shrink Photos/Stickers to 200px (Normal Image).",
     "destruct": "🛡️ **DESTRUCT HELP**\n• `.ss [reply]` : Save View-Once/Destructing media permanently.",
     "quotly": "💬 **QUOTLY HELP**\n• `.quotly [reply]` : Message to Sticker.",
@@ -25,7 +27,7 @@ HELP_DICT = {
     "info": "ℹ️ **INFO HELP**\n• `.info [@user/reply]` : Get ID, Name, DC, and Profile details.",
     "b-cast": "ℹ️ **Broadcast HELP**\n• `.bcast [msg/reply to msg]` :Forward msg in one click to all chats.",
     "flirt": "ℹ️ **Flirt HELP**\n• `.flirt [@user/reply]` : To flirt with user.",
-    "Animate: "ℹ️ **ANIMATION HELP**\n• `.animation : To know the list of all animation.",
+    "Animate": "ℹ️ **ANIMATION HELP**\n• `.animation` : To know the list of all animation.",
     "ping": "⚡ **PING HELP**\n• `.ping` : Check bot speed/latency.",
     "alive": "👑 **ALIVE HELP**\n• `.alive` : Check if bot is working + System Info.",
     "lyrics": "🎵 **LYRICS HELP**\n• `.lyrics [song name]` : Find full song lyrics.",
@@ -37,6 +39,7 @@ HELP_DICT = {
     "song": "🎧 **SONG**\n• `.song [name]` : Download/Find song.",
     "restart": "🔄 **RESTART**\n• `.restart` : Reboot the userbot."
 }
+
 
 ALIASES = {
     "sraid": "raid", "rraid": "raid", "drraid": "raid", "fsraid": "raid",
