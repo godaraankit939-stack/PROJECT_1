@@ -1,7 +1,7 @@
 import asyncio
 import random
 import requests
-from telethon import events
+from telethon import events, functions # <--- FIXED: 'functions' import kiya
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from database import get_maintenance, is_sudo, is_banned
 from config import OWNER_ID
@@ -15,11 +15,11 @@ def get_remote_aura():
         if response.status_code == 200:
             return [line.strip() for line in response.text.split('\n') if line.strip()]
     except: pass
-    return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤𝖣** 🛡️"]
+    return ["**⌬ 𝖠𝖢𝖢𝖤𝖲𝖲 𝖣𝖤▵▨𝖤▣** 🛡️"]
 
 # ================= QUOTE LOGIC (.Q) =================
 
-@events.register(events.NewMessage(pattern=r"\.q ?(.*)"))
+@events.register(events.NewMessage(pattern=r"\.q(?:uote)? ?(.*)")) # <--- FIXED: .quote pattern add kiya
 async def quotly_cmd(event):
     # 🛡️ 1. NO ENTRY LOGIC
     if event.is_private and event.chat_id == OWNER_ID and event.sender_id != OWNER_ID:
@@ -73,4 +73,4 @@ async def quotly_cmd(event):
 # ================= SETUP =================
 async def setup(client):
     client.add_event_handler(quotly_cmd)
-                                  
+    
