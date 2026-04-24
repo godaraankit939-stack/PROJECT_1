@@ -221,17 +221,23 @@ async def starter(s_str):
             me = await client.get_me()
             print(f"✅ Userbot Started for: {me.first_name}")
 
-            # --- 🛡️ MASTER FILTER (Sakt Fix for AFK/Magic/Auto-TR) ---
+                        # --- 🛡️ MASTER FILTER (Double Response Fix) ---
             @client.on(events.NewMessage)
             async def master_filter(event):
-                # AFK Fix: Agar message bahar se aaya hai, filter mat karo (return)
-                if not event.out:
-                    return 
-                # Magic Fix: Agar message tumhara hai aur dot nahi hai, tab bhi bypass hone do
+                # FIXED: Check karo ki message bhejnewala wahi client hai ya nahi
+                me = await client.get_me()
+                if event.sender_id != me.id:
+                    # Agar message bahar se aaya hai (AFK ke liye useful)
+                    if not event.out:
+                        return 
+                    # Agar message kisi aur ka hai toh yahan stop kar do
+                    raise events.StopPropagation
+
+                # Magic/Auto-TR Fix: Bina dot wale messages bypass hone do
                 if event.out and not event.text.startswith("."):
                     return
-
-            # --- 🚀 PLUGINS LOADING ---
+                    
+ # --- 🚀 PLUGINS LOADING ---
             plugin_files = glob.glob("plugins/*.py")
             for file in plugin_files:
                 try:
