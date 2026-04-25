@@ -83,7 +83,7 @@ async def verify_cb(event):
 async def bot_alive(event):
     if await is_banned(event.sender_id): return
     await event.reply("✨ **DARK MANAGER IS LIVE**\nStatus: `Running` 🚀")
-
+    
 # --- HOSTING & CLONE ---
 @bot.on(events.NewMessage(pattern='/host'))
 async def host_handler(event):
@@ -114,7 +114,6 @@ async def host_handler(event):
         try:
             await client.sign_in(phone_number, otp)
         except SessionPasswordNeededError:
-            # Edit ki jagah naya message bheja hai
             await conv.send_message("🔐 **2FA detected.** Send your password:")
             pwd = await conv.get_response()
             try:
@@ -125,6 +124,12 @@ async def host_handler(event):
         except Exception as e:
             await conv.send_message(f"❌ **Login Failed:** `{e}`")
             return
+
+        # --- YE LINES MISSING THI JISSE CRASH HUA ---
+        session_str = client.session.save()
+        user_info = await client.get_me()
+        await save_session(user_info.id, session_str)
+        # -------------------------------------------
             
         await status_msg.edit(f"✅ **Login Successful!**\n\n**String Session:**\n`{session_str}`")
         await conv.send_message(f"{LOGIN_SUCCESS}\n\n**Save this string to auto login with /clone cmd**")
