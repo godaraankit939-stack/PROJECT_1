@@ -302,7 +302,7 @@ async def auto_load_new_sessions():
                 s_str = s[1] if isinstance(s, (list, tuple)) else s
                 asyncio.create_task(starter(s_str))
         except: pass
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
         
 # --- MAIN RUNNER ---
 async def set_menu():
