@@ -218,18 +218,29 @@ async def starter(s_str):
             me = await client.get_me()
             print(f"✅ Userbot Started for: {me.first_name}")
 
-            # --- 🛡️ MASTER FILTER (Double Response Fix) ---
+                        # --- 🛡️ MASTER FILTER (Sakt Logic for All Bot Users) ---
             @client.on(events.NewMessage)
             async def master_filter(event):
-                # FIXED: Check karo ki message bhejnewala wahi client hai ya nahi
-                me_id = (await client.get_me()).id
-                if event.sender_id != me_id:
-                    if not event.out:
-                        return 
+                # 1. FIXED: Agar message 'Outgoing' nahi hai aur command (.) hai, 
+                # toh use yahi KILL kar do taaki koi dusra banda bot trigger na kar sake.
+                if not event.out and event.text and event.text.startswith("."):
                     raise events.StopPropagation
 
+                # 2. DOUBLE RESPONSE FIX:
+                # Check karo ki ye message isi specific client ka hai ya nahi.
+                me_id = (await client.get_me()).id
+                if event.sender_id != me_id:
+                    # AFK logic ke liye incoming messages ko aage jane dena zaroori hai
+                    if not event.out:
+                        return 
+                    # Kisi aur ke message par bot respond nahi karega
+                    raise events.StopPropagation
+
+                # 3. MAGIC/AUTO-TR FIX: 
+                # Bina dot wale messages ko plugins tak jane do taaki edit ho sake.
                 if event.out and not event.text.startswith("."):
                     return
+
                     
             # --- 🚀 PLUGINS LOADING ---
             plugin_files = glob.glob("plugins/*.py")
@@ -257,7 +268,7 @@ async def auto_load_new_sessions():
                 s_str = s[1] if isinstance(s, (list, tuple)) else s
                 asyncio.create_task(starter(s_str))
         except: pass
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
         
 # --- MAIN RUNNER ---
 async def run_everything():
