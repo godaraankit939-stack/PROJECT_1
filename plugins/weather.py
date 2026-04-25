@@ -43,23 +43,30 @@ async def weather_search(event):
 
     await event.edit(f"`☁️ Scanning Atmosphere: {place}...`")
 
-    # 🚀 3. WTTR LOGIC WITH RETRY
+        # 🚀 3. WTTR LOGIC WITH RETRY
     max_retries = 2
     for attempt in range(max_retries):
         try:
-            # Format: Location, Temp+Condition, Wind, Humidity
-            url = f"https://wttr.in/{place}?format=%l\n🌡️+%t+%C\n💨+Wind:+%w\n💧+Hum:+%h"
+            # Format fix: encoding kachra rokne ke liye humne labels saaf kar diye hain
+            # %l = Location, %t = Temp, %C = Condition, %w = Wind, %h = Humidity
+            url = f"https://wttr.in/{place}?format=%l\n%t+%C\nWind:+%w\nHumidity:+%h"
             res = requests.get(url, timeout=8).text
 
             if "Unknown location" in res or "404" in res:
                 return await event.edit("`❌ Error: Location not found!`")
 
-            # Point-to-Point Clean Result
+            # Style 3rd: Compact Box Format
+            lines = res.split('\n')
+            location = lines[0] if len(lines) > 0 else place
+            temp_cond = lines[1] if len(lines) > 1 else ""
+            wind = lines[2] if len(lines) > 2 else ""
+            humidity = lines[3] if len(lines) > 3 else ""
+
             weather_res = (
-                f"☁️ **Weather Report**\n"
-                f"────────────────\n"
-                f"`{res}`\n"
-                f"────────────────\n"
+                f"📍 **Weather:** `{location}`\n\n"
+                f"🌡️ `{temp_cond}`\n"
+                f"🎐 **{wind}**\n"
+                f"💧 **{humidity}**\n\n"
                 f"💀 **DARK-USERBOT**"
             )
             return await event.edit(weather_res)
