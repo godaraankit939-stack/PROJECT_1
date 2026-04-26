@@ -258,7 +258,7 @@ async def panel(event):
 # --- 🚀 MULTI-USERBOT LOADING LOGIC ---
 running_sessions = set()
 
-async async def starter(s_str):
+async def starter(s_str):
     if s_str in running_sessions:
         return
     try:
