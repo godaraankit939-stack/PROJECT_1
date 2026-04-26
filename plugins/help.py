@@ -30,10 +30,11 @@ HELP_MENU = """
 ┃ ◈ Lyrics      ◈ Memify       ┃
 ┃ ◈ Mention     ◈ Ping         ┃
 ┃ ◈ Quotly      ◈ Raid         ┃
-┃ ◈ Tiny        ◈ Translate    ┃
+┃ ◈ Purge       ◈ Translate    ┃
 ┃ ◈ Weather     ◈ Magic        ┃
 ┃ ◈ Flirt       ◈ Autotr       ┃
 ┃ ◈ Hot(18+)    ◈ Spam         ┃
+┃ ◈ coming...   ◈ coming...    ┃
 ┣━━━━━━━━━━━━┻━━━━━━━━━━━━━┫
 ┃ Powered By : MSD 👑          ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛
