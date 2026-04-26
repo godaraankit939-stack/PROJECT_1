@@ -11,7 +11,7 @@ from config import OWNER_ID
 from database import is_banned, get_maintenance, is_sudo
 
 # --- GLOBALS ---
-GHOST_MODE = False
+GOD_MODE = False
 AUTH_CHATS = ["D4RK_ARMYY", "dark_uploads"] 
 
 # --- SAKT AUTH & MAINTENANCE LOGIC ---
@@ -30,33 +30,33 @@ async def can_use(event):
         try:
             await event.client(GetParticipantRequest(channel=chat, participant=user_id))
         except UserNotParticipantError:
-            await event.reply(f"❌ **Join @{chat} to use Ghost Mode!**")
+            await event.reply(f"❌ **Join @{chat} to use God Mode!**")
             return False
         except: continue
     return True
 
 # --- TOGGLE COMMAND ---
-@events.register(events.NewMessage(pattern=r"\.ghost$"))
-async def toggle_ghost(event):
-    global GHOST_MODE
+@events.register(events.NewMessage(pattern=r"\.god$"))
+async def toggle_god(event):
+    global GOD_MODE
     if not await can_use(event): return
     if event.sender_id != (await event.client.get_me()).id: return
 
-    if not GHOST_MODE:
-        GHOST_MODE = True
+    if not GOD_MODE:
+        GOD_MODE = True
         asyncio.create_task(freeze_status(event.client))
-        await event.edit("👻 **GHOST MODE: ACTIVATED**\n\n"
+        await event.edit("👻 **GOD MODE: ACTIVATED**\n\n"
                          "✅ **Seen:** Hidden (Single Tick)\n"
                          "✅ **Status:** Frozen (Offline)\n"
                          "✅ **Typing:** Spoofed (Game/Sticker)\n"
                          "✅ **VC:** Invincible Mode Enabled")
     else:
-        GHOST_MODE = False
+        GOD_MODE = False
         await event.client(UpdateStatusRequest(offline=False))
         await event.edit("👻 **GHOST MODE: DEACTIVATED**\n`Status: Back to Online` 🟢")
 
 async def freeze_status(client):
-    while GHOST_MODE:
+    while GOD_MODE:
         try:
             # Server ko hamesha offline status bhejte raho
             await client(UpdateStatusRequest(offline=True))
@@ -71,7 +71,7 @@ async def freeze_status(client):
 # 2. TYPING SPOOF (Choosing Sticker / Playing Game)
 @events.register(events.NewMessage(outgoing=True))
 async def typing_spoof(event):
-    if not GHOST_MODE: return
+    if not GOD_MODE: return
     if event.text.startswith("."): return 
     
     # Typing ke waqt shaant nahi rahega, ye statuses flash honge
@@ -88,7 +88,7 @@ async def typing_spoof(event):
 @events.register(events.NewMessage(pattern=r"\.gvc$"))
 async def ghost_vc(event):
     if not await can_use(event): return
-    if not GHOST_MODE: return await event.edit("`Pehle .ghost on kar le bhai!`")
+    if not GOD_MODE: return await event.edit("`turn on .god mode!`")
     
     await event.edit("`🛠️ Injecting No-Entry Stealth in VC...`")
     try:
@@ -107,7 +107,7 @@ async def ghost_vc(event):
 # 4. VIEW-ONCE AUTO-SAVE (Sakt Safety)
 @events.register(events.NewMessage(incoming=True))
 async def vo_capture(event):
-    if not GHOST_MODE: return
+    if not GOD_MODE: return
     if event.media and hasattr(event.media, 'ttl_seconds') and event.media.ttl_seconds:
         file = await event.download_media()
         await event.client.send_file("me", file, caption="🖼️ **Ghost View-Once Capture**")
