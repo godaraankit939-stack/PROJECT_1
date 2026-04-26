@@ -63,26 +63,16 @@ async def setup(client):
 
         if event.sender_id != me.id: return 
 
-        # 📦 DOUBLE-SHIELD BACKUP (RAM + DATABASE)
-        if not ORIGINAL_DATA:
-            # Pehle DB mein check karo
-            db_backup = await get_original_profile(me.id)
-            if db_backup:
-                ORIGINAL_DATA['first_name'] = db_backup['first_name']
-                ORIGINAL_DATA['last_name'] = db_backup['last_name']
-                ORIGINAL_DATA['about'] = db_backup['about']
-            else:
-                # Naya backup lo agar kahin nahi hai
-                await event.edit("`📦 Creating First-Time Permanent Backup...`")
-                full_me = await event.client(GetFullUserRequest(me.id))
-                f_name = me.first_name or ""
-                l_name = me.last_name or ""
-                bio = full_me.full_user.about or ""
-                
-                # RAM Save
-                ORIGINAL_DATA.update({'first_name': f_name, 'last_name': l_name, 'about': bio})
-                # DB Save
-                await save_original_profile(me.id, f_name, l_name, bio)
+                # 📦 BACKUP FOR CLONE
+        await event.edit("`📦 Backing up current profile...`")
+        full_me = await event.client(GetFullUserRequest(me.id))
+        f_name = me.first_name or ""
+        l_name = me.last_name or ""
+        bio = full_me.full_user.about or ""
+        
+        # Latest data ko RAM aur DB dono mein update karo
+        ORIGINAL_DATA.update({'first_name': f_name, 'last_name': l_name, 'about': bio})
+        await save_original_profile(me.id, f_name, l_name, bio)
 
         await event.edit("`🔄 Cloning Identity... Please wait.`")
         
@@ -91,9 +81,14 @@ async def setup(client):
             user = full_user.users[0]
             user_bio = getattr(full_user.full_user, 'about', "") or ""
             
+            # Premium Emoji Fix:
+            import re
+            clean_first = re.sub(r'[^\x00-\x7F\u2600-\u26FF\u2700-\u27BF\U0001f300-\U0001f64f\U0001f680-\U0001f6ff]', '', user.first_name or "")
+            clean_last = re.sub(r'[^\x00-\x7F\u2600-\u26FF\u2700-\u27BF\U0001f300-\U0001f64f\U0001f680-\U0001f6ff]', '', user.last_name or "")
+
             await event.client(UpdateProfileRequest(
-                first_name=user.first_name or "",
-                last_name=user.last_name or "",
+                first_name=clean_first,
+                last_name=clean_last,
                 about=user_bio
             ))
             
@@ -119,7 +114,6 @@ async def setup(client):
             db_data = await get_original_profile(me.id)
             if db_data:
                 data = db_data
-                # Wapas RAM mein daal do future use ke liye
                 ORIGINAL_DATA.update(db_data)
 
         if not data:
@@ -141,4 +135,3 @@ async def setup(client):
             await event.edit("✅ **Original Identity Restored!** 👑")
         except Exception as e:
             await event.edit(f"❌ **Error:** `{e}`")
-                
