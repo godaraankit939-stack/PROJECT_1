@@ -38,7 +38,7 @@ async def fast_spam(event):
     for _ in range(count):
         if not SPAM_RUNNING: break
         await event.client.send_message(event.chat_id, text)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
 # ================= 2. .dmspam [Count] [Target] [Text] =================
 @events.register(events.NewMessage(pattern=r"\.dmspam (\d+) (.*)"))
