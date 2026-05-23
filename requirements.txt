@@ -16,7 +16,7 @@ SpeechRecognition
 pydub
 pytz
 pyrogram==2.0.106
-pytgcalls==2.0.0
+pytgcalls==3.0.0.dev24
 yt-dlp
 pillow
 ffmpeg-python
