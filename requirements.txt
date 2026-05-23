@@ -15,3 +15,6 @@ gTTS
 SpeechRecognition
 pydub
 pytz
+pyrogram
+pytgcalls==2.0.3
+yt-dlp
