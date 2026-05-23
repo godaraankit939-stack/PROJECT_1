@@ -18,3 +18,4 @@ pytz
 pyrogram
 pytgcalls==2.0.3
 yt-dlp
+ffmpeg-python
