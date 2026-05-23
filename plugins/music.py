@@ -1,13 +1,12 @@
 import asyncio
+from os import environ
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pytgcalls import PyTgCalls
 from pytgcalls.types import MediaStream
-from pytgcalls.types.input_stream import AudioVideoPiped
 from os import environ
 
 # --- UNIVERSAL ENGINE CONFIGURATION ---
-# Assistant session fetched from environment variables on Railway
 ASSISTANT_SESSION = environ.get("ASSISTANT_SESSION", "your_assistant_string_session_here")
 
 # Initialize the secondary assistant client dynamically
@@ -45,19 +44,16 @@ async def fetch_premium_stream(query: str, video_mode: bool = False):
 async def execute_sequential_join(main_client, chat_id: int):
     """Executes the 3-Option Automatic Join Logic sequentially."""
     try:
-        # Option 1: Main Userbot attempts direct member injection
         bot_peer = await assistant_client.get_me()
         await main_client.add_chat_members(chat_id, bot_peer.id)
         return True
     except Exception:
         try:
-            # Option 2: Main Userbot exports chat invite link for automated entry
             invite_url = await main_client.export_chat_invite_link(chat_id)
             await assistant_client.join_chat(invite_url)
             return True
         except Exception:
             try:
-                # Option 3: Standard public channel handle resolve routine
                 target_chat = await main_client.get_chat(chat_id)
                 if target_chat.username:
                     await assistant_client.join_chat(target_chat.username)
@@ -88,7 +84,6 @@ async def play_stream_router(client: Client, message: Message):
 
     search_query = message.text.split(None, 1)[1]
     
-    # Text-dot mapping system for real-time tracking interface
     tracking_panel = await message.edit("🔍 **Searching**")
     await asyncio.sleep(1.2)
     await tracking_panel.edit("🔍 **Searching.**")
@@ -103,7 +98,6 @@ async def play_stream_router(client: Client, message: Message):
         await tracking_panel.edit(f"❌ **Metadata Scraping Failed:** `{str(error)}`")
         return
 
-    # Validating assistant visibility markers in target space
     try:
         await assistant_client.get_chat_member(chat_id, "me")
     except Exception:
@@ -123,7 +117,7 @@ async def play_stream_router(client: Client, message: Message):
         "is_video": video_requested,
         "duration": track_len,
         "author": message.from_user.mention,
-        "owner_id": message.from_user.id  # Tracks who started the bot instance for button safety
+        "owner_id": message.from_user.id
     })
 
     if len(group_music_queue[chat_id]) == 1:
@@ -137,13 +131,17 @@ async def stream_initialization_pipeline(chat_id: int, tracking_panel: Message):
 
     active_track = group_music_queue[chat_id][0]
     
+    # Version 3.x Universal Unified MediaStream Mapper
     if active_track["is_video"]:
-        stream_spec = AudioVideoPiped(
+        stream_spec = MediaStream(
             active_track["audio"],
-            MediaStream(active_track["video"], width=1920, height=1080, fps=30)
+            video_path=active_track["video"],
+            video_width=1920,
+            video_height=1080,
+            video_fps=30
         )
     else:
-        stream_spec = AudioVideoPiped(active_track["audio"])
+        stream_spec = MediaStream(active_track["audio"])
 
     try:
         if not call_engine.is_connected:
@@ -173,7 +171,18 @@ async def process_track_skip(chat_id: int, tracking_panel: Message):
 
     if chat_id in group_music_queue and group_music_queue[chat_id]:
         try:
-            await call_engine.change_stream(chat_id, AudioVideoPiped(group_music_queue[chat_id][0]["audio"]))
+            if group_music_queue[chat_id][0]["is_video"]:
+                next_spec = MediaStream(
+                    group_music_queue[chat_id][0]["audio"],
+                    video_path=group_music_queue[chat_id][0]["video"],
+                    video_width=1920,
+                    video_height=1080,
+                    video_fps=30
+                )
+            else:
+                next_spec = MediaStream(group_music_queue[chat_id][0]["audio"])
+                
+            await call_engine.change_stream(chat_id, next_spec)
             await stream_initialization_pipeline(chat_id, tracking_panel)
         except Exception:
             await call_engine.leave_group_call(chat_id)
@@ -194,12 +203,10 @@ async def process_track_skip(chat_id: int, tracking_panel: Message):
 async def music_dashboard_callback(client: Client, callback_query: CallbackQuery):
     target_chat = callback_query.message.chat.id
     
-    # Safety Valve: Check if queue metadata exists for the chat
     if target_chat not in group_music_queue or not group_music_queue[target_chat]:
         await callback_query.answer("❌ No active playlist found for this chat.", show_alert=True)
         return
         
-    # Dynamic Check: Only allows the specific person who configured/ran this instance to click buttons
     allowed_user_id = group_music_queue[target_chat][0]["owner_id"]
     if callback_query.from_user.id != allowed_user_id:
         await callback_query.answer("❌ Access Denied: Only the Userbot Deployer can manage this playback.", show_alert=True)
@@ -223,4 +230,4 @@ async def music_dashboard_callback(client: Client, callback_query: CallbackQuery
         if target_chat in group_music_queue:
             del group_music_queue[target_chat]
         await callback_query.message.edit("⏹️ **Stream session terminated. Assistant client disconnected successfully.**")
-  
+    
